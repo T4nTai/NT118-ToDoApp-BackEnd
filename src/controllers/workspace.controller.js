@@ -64,7 +64,7 @@ export async function getListMember(req, res, next) {
 }
 
 
-export async function removeWorkspaceMemberService(req, res, next) {
+export async function removeWorkspaceMember(req, res, next) {
     try {
         const { workspace_id, user_id } = req.params;
 

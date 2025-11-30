@@ -17,9 +17,14 @@ export const Subtask = sequelize.define('Subtask', {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE'
   },
-  name: {
+  title: {
     type: DataTypes.STRING(100),
     allowNull: false
+  },
+  priority: {
+  type: DataTypes.ENUM('Low', 'Medium', 'High', 'Critical'),
+  allowNull: false,
+  defaultValue: 'Medium'
   },
   description: {
     type: DataTypes.TEXT,

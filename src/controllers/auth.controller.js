@@ -6,8 +6,10 @@ import { signUpService,
          forgotPasswordService, 
          updateUserProfileService, 
          checkResetTokenService,
-         refreshTokenService
+         refreshTokenService,
         } from "../services/authservices.js";
+import { githubSignInService,githubCallbackService } from "../services/githubservices.js";
+import { FRONTEND_URL, MOBILE_SCHEME } from "../config/env.js";
 
 export async function signUp(req, res, next) {
   try {
@@ -32,7 +34,7 @@ export async function signUp(req, res, next) {
 
 export async function signIn(req, res, next) {
   try {
-    const { user, role ,accessToken, refreshToken } = await signInService(req.body);
+    const { user, accessToken, refreshToken } = await signInService(req.body);
     return res.status(200).json({
       message: "Đăng nhập thành công",
       accessToken,
@@ -44,6 +46,45 @@ export async function signIn(req, res, next) {
     next(err);
   }
 }
+
+export async function githubSignIn(req, res, next) {
+  const platform = req.query.platform || "web"; // web | mobile
+  const url = githubSignInService(platform);
+  res.redirect(url);
+}
+
+export async function githubCallback(req, res, next) {
+  try {
+    const { code, state, mode } = req.query;
+    const currentUserId = req.user?.id || null;
+    const result = await githubCallbackService(code, state, mode, currentUserId);
+    if (result.mode === "link") {
+      if (state === "mobile") {
+        return res.redirect(`${MOBILE_SCHEME}?linked=true`);
+      }
+      return res.redirect(`${FRONTEND_URL}/github-link-success`);
+    }
+    const { accessToken, refreshToken } = result;
+
+    if (state === "mobile") {
+      return res.redirect(
+        `${MOBILE_SCHEME}?token=${accessToken}&refresh=${refreshToken}`
+      );
+    }
+
+    return res.redirect(
+      `${FRONTEND_URL}/auth-success?token=${accessToken}&refresh=${refreshToken}`
+    );
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ 
+      message: "Lỗi xử lý callback GitHub",
+      error: err 
+    });
+  }
+}
+
 
 export async function getUserById(req, res, next) {
   const user_id = req.user.id;

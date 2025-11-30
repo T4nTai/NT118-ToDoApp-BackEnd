@@ -7,6 +7,7 @@ import { generateResetPasswordEmail } from "../ultis/reset_password_email_templa
 import { transporter } from "../config/mail.js";
 import { Op } from "sequelize";
 
+
 function generateAccessToken(user) {
   return jwt.sign(
     {
@@ -26,6 +27,8 @@ function generateRefreshToken(user) {
     { expiresIn: "7d" }
   );
 }
+
+
 
 export async function refreshTokenService(token) {
   if (!token) {

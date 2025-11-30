@@ -7,29 +7,56 @@ export const Project = sequelize.define('Project', {
     autoIncrement: true,
     primaryKey: true
   },
-  group_id: {
+
+  workspace_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: 'workspaces',
+      key: 'workspace_id'
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE'
+  },
+
+  assigned_group_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
     references: {
       model: 'groups',
       key: 'group_id'
     },
     onUpdate: 'CASCADE',
-    onDelete: 'CASCADE'
+    onDelete: 'SET NULL'
   },
+
+  assigned_user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'users',
+      key: 'user_id'
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL'
+  },
+
   name: {
     type: DataTypes.STRING(255),
     allowNull: false
   },
+
   description: {
     type: DataTypes.TEXT,
     allowNull: true
   },
+
   status: {
     type: DataTypes.ENUM('Active', 'On Hold', 'Completed', 'Archived'),
     allowNull: false,
     defaultValue: 'Active'
   },
+
   owner_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -40,6 +67,7 @@ export const Project = sequelize.define('Project', {
     onUpdate: 'CASCADE',
     onDelete: 'RESTRICT'
   },
+
   workflow_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
@@ -50,23 +78,35 @@ export const Project = sequelize.define('Project', {
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL'
   },
+
+  priority: {
+    type: DataTypes.ENUM('Low', 'Medium', 'High', 'Critical'),
+    allowNull: false,
+    defaultValue: 'Medium'
+  },
+
   created_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
   },
+
   start_date: {
     type: DataTypes.DATEONLY,
     allowNull: true
   },
+
   due_date: {
     type: DataTypes.DATEONLY,
     allowNull: true
   }
+
 }, {
   tableName: 'projects',
   timestamps: false,
   indexes: [
-    { fields: ['group_id'] },
+    { fields: ['workspace_id'] },
+    { fields: ['assigned_group_id'] },
+    { fields: ['assigned_user_id'] },
     { fields: ['owner_id'] },
     { fields: ['workflow_id'] }
   ]

@@ -9,14 +9,25 @@ export const Task = sequelize.define('Task', {
   },
   project_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: 'projects',
       key: 'project_id'
     },
     onUpdate: 'CASCADE',
-    onDelete: 'CASCADE'
+    onDelete: 'SET NULL'
   },
+  group_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'groups',
+      key: 'group_id'
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL'
+  },
+
   milestone_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
@@ -27,24 +38,35 @@ export const Task = sequelize.define('Task', {
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL'
   },
+
   title: {
     type: DataTypes.STRING(255),
     allowNull: false
   },
+
   description: {
     type: DataTypes.TEXT,
     allowNull: true
   },
+
   status: {
     type: DataTypes.ENUM('To Do', 'In Progress', 'Review', 'Done', 'Blocked'),
     allowNull: false,
     defaultValue: 'To Do'
   },
+
   task_progress: {
     type: DataTypes.DECIMAL(5, 2),
     allowNull: false,
     defaultValue: 0.00
   },
+  
+  priority: {
+  type: DataTypes.ENUM('Low', 'Medium', 'High', 'Critical'),
+  allowNull: false,
+  defaultValue: 'Medium'
+  },
+
   created_by: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -55,6 +77,7 @@ export const Task = sequelize.define('Task', {
     onUpdate: 'CASCADE',
     onDelete: 'RESTRICT'
   },
+
   assigned_to: {
     type: DataTypes.INTEGER,
     allowNull: true,
@@ -65,6 +88,7 @@ export const Task = sequelize.define('Task', {
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL'
   },
+
   step_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
@@ -75,6 +99,7 @@ export const Task = sequelize.define('Task', {
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL'
   },
+
   created_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
@@ -83,6 +108,7 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
   },
+
   start_date: {
     type: DataTypes.DATEONLY,
     allowNull: true
@@ -98,6 +124,7 @@ export const Task = sequelize.define('Task', {
   updatedAt: 'updated_at',
   indexes: [
     { fields: ['project_id'] },
+    { fields: ['group_id'] },    
     { fields: ['milestone_id'] },
     { fields: ['created_by'] },
     { fields: ['assigned_to'] },

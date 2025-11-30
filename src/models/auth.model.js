@@ -35,7 +35,23 @@ export const User = sequelize.define('User', {
   },
   password: {
     type: DataTypes.STRING(255),
-    allowNull: false
+    allowNull: true
+  },
+  github_id: {
+  type: DataTypes.STRING,
+  allowNull: true,
+  },
+  avatar_url: {
+  type: DataTypes.STRING,
+  allowNull: true,
+  },
+  avatar_public_id: {
+  type: DataTypes.STRING,
+  allowNull: true,
+  },
+  github_access_token: {
+  type: DataTypes.STRING,
+  allowNull: true,
   },
   created_at: {
     type: DataTypes.DATE,
@@ -48,14 +64,14 @@ export const User = sequelize.define('User', {
   reset_token: {
   type: DataTypes.STRING,
   allowNull: true,
-},
-reset_expires: {
+  },
+  reset_expires: {
   type: DataTypes.DATE,
   allowNull: true,
-},
-}, {
+  },
+  }, {
   tableName: 'users',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'
-});
+  });

@@ -6,6 +6,7 @@ import ProjectRouter from './project.routes.js';
 import PerformanceRouter from './performance.routes.js';
 import SubTaskRouter from './subtask.route.js';
 import WorkspaceRouter from './workspace.routes.js';
+import AvatarRouter from './avatar.routes.js';
 
 const router = Router();
 
@@ -28,6 +29,9 @@ router.use('/subtask', SubTaskRouter);
 
 
 router.use('/workspace', WorkspaceRouter);
+
+
+router.use('/user', AvatarRouter);
 
 
 export default router;
