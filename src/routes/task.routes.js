@@ -1,14 +1,13 @@
 import { Router } from "express";
+import { authenticateJWT } from "../middleware/auth.middleware.js";
+import { viewTasksByUser, changeTaskStatus,updateTaskStatusIfSubtasksCompleted } from "../controllers/task.controller.js";
 
 const TaskRouter = Router();
 
-TaskRouter.get ("/", (req, res) => {res.send({ title: 'Get All Tasks' });});
+TaskRouter.get("/user-tasks", authenticateJWT, viewTasksByUser);
 
-TaskRouter.post("/", (req, res) => {res.send({ title: 'Create Task' });});
+TaskRouter.patch("/:task_id/status", authenticateJWT, changeTaskStatus);
 
-TaskRouter.put ("/:id", (req, res) => {res.send({ title: 'Update Task' });});
-TaskRouter.delete("/:id", (req, res) => {res.send({ title: 'Delete Task' });});
-
-TaskRouter.get ("/:id", (req, res) => {res.send({ title: 'Get Task by ID' });});
+TaskRouter.patch("/:task_id/update-completed", authenticateJWT, updateTaskStatusIfSubtasksCompleted);
 
 export default TaskRouter;

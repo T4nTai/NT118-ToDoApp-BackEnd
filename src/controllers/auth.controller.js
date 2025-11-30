@@ -1,52 +1,184 @@
-import { createUser, getUserByUsername, User } from "../models/auth.model.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { JWT_SECRET,JWT_EXPIRES_IN } from "../config/env.js";
+import { signUpService, 
+         signInService, 
+         signOutService,
+         getUserByIdService ,
+         resetPasswordService, 
+         forgotPasswordService, 
+         updateUserProfileService, 
+         checkResetTokenService,
+         refreshTokenService,
+        } from "../services/authservices.js";
+import { githubSignInService,githubCallbackService } from "../services/githubservices.js";
+import { FRONTEND_URL, MOBILE_SCHEME } from "../config/env.js";
 
-
-export async function SignUp(req, res, next) {
-  const { username, email, password } = req.body;
-    try {
-        const existingUser = await getUserByUsername(username); 
-        const existingEmail = await getUserByUsername(email); 
-        if (existingEmail) {
-            return res.status(400).json({ message: 'Email already exists' });
-        }
-        if (existingUser) {
-            return res.status(400).json({ message: 'Username already exists' });
-        }
-        const newUser = await createUser(username, email, password);
-        const token = jwt.sign({ id: newUser.id, username: newUser.username }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-        res.status(201).json({ id: newUser.id, username: newUser.username, email: newUser.email, token });
-        console.log('User registered:', newUser);
-    } catch (error) {
-        next(error);
-    }
-}
-
-export async function SignIn(req, res, next) {
-  const { username, password } = req.body;
+export async function signUp(req, res, next) {
   try {
-      const user = await getUserByUsername(username);
-      if(!user) {
-            return res.status(401).json({ message: 'Invalid username' });
-        }
-        console.log(user);
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) {
-            return res.status(401).json({ message: 'Invalid password' });
+    const newUser = await signUpService(req.body);
+    return res.status(201).json({
+      message: "Đăng ký thành công",
+      user: {
+        user_id: newUser.user_id,
+        email: newUser.email,
+        phone_number: newUser.phone_number,
+        username: newUser.username,
+        address: newUser.address,
+        birthday: newUser.birthday,
+        role: newUser.role
       }
-      res.status(200).json({ message: 'Sign-in successful' });
-      const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-  } catch (error) {
-      next(error);
+    });
+  } catch (err) {
+    if (err && err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
   }
 }
 
-export async function SignOut(req, res, next) {
+export async function signIn(req, res, next) {
   try {
-      res.status(200).json({ message: 'Sign-out successful' });
-  } catch (error) {
-      next(error);
+    const { user, accessToken, refreshToken } = await signInService(req.body);
+    return res.status(200).json({
+      message: "Đăng nhập thành công",
+      accessToken,
+      refreshToken,
+      user: { user_id: user.user_id, email: user.email, phone_number: user.phone_number, username: user.username, address: user.address, birthday: user.birthday, role: user.role },
+    });
+  } catch (err) {
+    if (err && err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+}
+
+export async function githubSignIn(req, res, next) {
+  const platform = req.query.platform || "web"; // web | mobile
+  const url = githubSignInService(platform);
+  res.redirect(url);
+}
+
+export async function githubCallback(req, res, next) {
+  try {
+    const { code, state, mode } = req.query;
+    const currentUserId = req.user?.id || null;
+    const result = await githubCallbackService(code, state, mode, currentUserId);
+    if (result.mode === "link") {
+      if (state === "mobile") {
+        return res.redirect(`${MOBILE_SCHEME}?linked=true`);
+      }
+      return res.redirect(`${FRONTEND_URL}/github-link-success`);
+    }
+    const { accessToken, refreshToken } = result;
+
+    if (state === "mobile") {
+      return res.redirect(
+        `${MOBILE_SCHEME}?token=${accessToken}&refresh=${refreshToken}`
+      );
+    }
+
+    return res.redirect(
+      `${FRONTEND_URL}/auth-success?token=${accessToken}&refresh=${refreshToken}`
+    );
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ 
+      message: "Lỗi xử lý callback GitHub",
+      error: err 
+    });
+  }
+}
+
+
+export async function getUserById(req, res, next) {
+  const user_id = req.user.id;
+  try {
+    const user = await getUserByIdService(user_id);
+    return res.status(200).json({
+      email: user.email,
+      phone_number: user.phone_number,
+      username: user.username,
+      address: user.address,
+      birthday: user.birthday
+    });
+  } catch (err) { 
+    if (err && err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+}
+
+export async function updateUserProfile(req, res, next) {
+  const user_id = req.user.id;
+  try {
+    const updatedUser = await updateUserProfileService(user_id, req.body);
+    return res.status(200).json({
+      email: updatedUser.email,
+      phone_number: updatedUser.phone_number,
+      username: updatedUser.username,
+      address: updatedUser.address,
+      birthday: updatedUser.birthday,
+      message: "Cập nhật thông tin người dùng thành công"
+    });
+  } catch (err) { 
+    if (err && err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+}
+    
+
+export async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body;
+    await forgotPasswordService(email);
+    return res.status(200).json({ message: "Email đặt lại mật khẩu đã được gửi" });
+  } catch (err) {
+    if (err && err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+}
+
+export async function checkResetToken(req, res, next) {
+  try {
+    const { token } = req.body;
+    await checkResetTokenService(token);
+    return res.status(200).json({ message: "Mã đặt lại mật khẩu hợp lệ" });
+  } catch (err) {
+    if (err && err.status) return res.status(err.status).json({ 
+      reset_token: token,
+      message: err.message });
+    next(err);
+  }
+}
+
+export async function resetPassword(req, res, next) {
+  try {
+    const { token, newPassword } = req.body;
+    const result = await resetPasswordService(token, newPassword);
+    return res.status(200).json({ message: result.message });
+  } catch (err) {
+    if (err && err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+}
+
+export async function signOut(req, res, next) {
+  try {
+    const refreshToken = req.body?.refreshToken || req.headers['x-refresh-token'] || (req.cookies && req.cookies.refreshToken);
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Cần cung cấp refresh token" });
+    }
+
+    const result = await signOutService(refreshToken);
+    return res.status(200).json({ message: result.message });
+  } catch (err) {
+    if (err && err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+}
+
+export async function refreshToken(req, res, next) {
+  try {
+    const { refreshToken } = req.body;
+    const result = await refreshTokenService(refreshToken);
+    res.json(result);
+  } catch (err) {
+    if (err && err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
   }
 }

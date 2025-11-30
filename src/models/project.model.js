@@ -1,23 +1,25 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/db.js';
 
-export const Task = sequelize.define('Task', {
-  task_id: {
+export const Project = sequelize.define('Project', {
+  project_id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true
   },
-  project_id: {
+
+  workspace_id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
     references: {
-      model: 'projects',
-      key: 'project_id'
+      model: 'workspaces',
+      key: 'workspace_id'
     },
     onUpdate: 'CASCADE',
-    onDelete: 'SET NULL'
+    onDelete: 'CASCADE'
   },
-  group_id: {
+
+  assigned_group_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
@@ -28,18 +30,18 @@ export const Task = sequelize.define('Task', {
     onDelete: 'SET NULL'
   },
 
-  milestone_id: {
+  assigned_user_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: 'milestones',
-      key: 'milestone_id'
+      model: 'users',
+      key: 'user_id'
     },
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL'
   },
 
-  title: {
+  name: {
     type: DataTypes.STRING(255),
     allowNull: false
   },
@@ -50,24 +52,12 @@ export const Task = sequelize.define('Task', {
   },
 
   status: {
-    type: DataTypes.ENUM('To Do', 'In Progress', 'Review', 'Done', 'Blocked'),
+    type: DataTypes.ENUM('Active', 'On Hold', 'Completed', 'Archived'),
     allowNull: false,
-    defaultValue: 'To Do'
+    defaultValue: 'Active'
   },
 
-  task_progress: {
-    type: DataTypes.DECIMAL(5, 2),
-    allowNull: false,
-    defaultValue: 0.00
-  },
-  
-  priority: {
-  type: DataTypes.ENUM('Low', 'Medium', 'High', 'Critical'),
-  allowNull: false,
-  defaultValue: 'Medium'
-  },
-
-  created_by: {
+  owner_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
@@ -78,33 +68,24 @@ export const Task = sequelize.define('Task', {
     onDelete: 'RESTRICT'
   },
 
-  assigned_to: {
+  workflow_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: 'users',
-      key: 'user_id'
+      model: 'workflows',
+      key: 'workflow_id'
     },
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL'
   },
 
-  step_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'workflow_steps',
-      key: 'step_id'
-    },
-    onUpdate: 'CASCADE',
-    onDelete: 'SET NULL'
+  priority: {
+    type: DataTypes.ENUM('Low', 'Medium', 'High', 'Critical'),
+    allowNull: false,
+    defaultValue: 'Medium'
   },
 
   created_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  },
-  updated_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
   },
@@ -113,21 +94,20 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.DATEONLY,
     allowNull: true
   },
+
   due_date: {
     type: DataTypes.DATEONLY,
     allowNull: true
   }
+
 }, {
-  tableName: 'tasks',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
+  tableName: 'projects',
+  timestamps: false,
   indexes: [
-    { fields: ['project_id'] },
-    { fields: ['group_id'] },    
-    { fields: ['milestone_id'] },
-    { fields: ['created_by'] },
-    { fields: ['assigned_to'] },
-    { fields: ['step_id'] }
+    { fields: ['workspace_id'] },
+    { fields: ['assigned_group_id'] },
+    { fields: ['assigned_user_id'] },
+    { fields: ['owner_id'] },
+    { fields: ['workflow_id'] }
   ]
 });

@@ -1,17 +1,28 @@
 import { Router } from "express";
-import { SignUp, SignIn, SignOut } from "../controllers/auth.controller.js";   
+import { authenticateJWT } from "../middleware/auth.middleware.js";
+import { signUp, signIn, signOut,getUserById ,resetPassword, forgotPassword, updateUserProfile, checkResetToken, refreshToken, githubCallback, githubSignIn } from "../controllers/auth.controller.js";   
 const AuthRouter = Router();
 
-AuthRouter.post("/Sign-up", SignUp);
+AuthRouter.post("/sign-up", signUp);
 
-AuthRouter.post("/Sign-in", SignIn);
+AuthRouter.post("/sign-in", signIn);
 
-AuthRouter.post("/Sign-out", SignOut);
+AuthRouter.post("/sign-out", authenticateJWT, signOut);
 
-AuthRouter.post("/forgot-password", (req, res) => {res.send({ title: 'Forgot Password' });});
+AuthRouter.post("/forgot-password", forgotPassword);
 
-AuthRouter.post("/reset-password", (req, res) => {res.send({ title: 'Reset Password' });});
+AuthRouter.post("/reset-password", resetPassword);
 
-AuthRouter.get ("/user-info", (req, res) => {res.send({ title: 'User Info' });});
+AuthRouter.get ("/user-info",authenticateJWT, getUserById);
+
+AuthRouter.post("/check-reset-token", checkResetToken);
+
+AuthRouter.put ("/update-profile",authenticateJWT, updateUserProfile);
+
+AuthRouter.post ("/refresh", refreshToken);
+
+AuthRouter.get("/github/sign-in", githubSignIn);
+
+AuthRouter.get("/github/callback", githubCallback);
 
 export default AuthRouter;
