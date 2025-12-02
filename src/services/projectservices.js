@@ -4,6 +4,8 @@ import { ProjectMember } from '../models/project_member.model.js';
 import { Group } from '../models/group.model.js';
 import { GroupMember } from '../models/group_member.model.js';
 import { sendNotificationEmail } from '../ultis/sendmail.js';
+import { WorkflowStep } from '../models/workflow_step.model.js';
+import { Workflow } from '../models/workflow.model.js';
 
 
 export async function createProjectService({ name, description, status, priority, start_date, due_date, owner_id }) {
@@ -16,6 +18,22 @@ export async function createProjectService({ name, description, status, priority
         throw { status: 400, message: "Ngày bắt đầu không thể sau ngày kết thúc" };
     }
     const project = await Project.create({ name, description, status, priority, start_date, due_date, owner_id });
+    const workflow = await Workflow.create({ project_id: project.project_id, name: "${name} Workflow" });
+    const defaultSteps = [
+        { name: "To Do", step_order: 1 },
+        { name: "In Progress", step_order: 2 },
+        { name: "Review", step_order: 3 },
+        { name: "Done", step_order: 4 }
+    ];
+    for (const step of defaultSteps) {
+        await WorkflowStep.create({
+            workflow_id: workflow.workflow_id,
+            name: step.name,
+            step_order: step.step_order
+        });
+    }
+    project.workflow_id = workflow.workflow_id;
+    await project.save();
 
     await ProjectMember.create({
         project_id: project.project_id,

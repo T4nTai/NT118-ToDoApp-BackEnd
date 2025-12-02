@@ -166,7 +166,8 @@ export async function updateUserProfileService(user_id, updates) {
   "username",
   "address",
   "birthday",
-  "github_access_token"
+  "github_access_token",
+  "avatar_base64"
   ];
   const user = await User.findByPk(user_id);
   if (!user) throw { status: 404, message: "Người dùng không tồn tại" };

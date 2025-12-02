@@ -35,17 +35,30 @@ export async function signUp(req, res, next) {
 export async function signIn(req, res, next) {
   try {
     const { user, accessToken, refreshToken } = await signInService(req.body);
+
     return res.status(200).json({
       message: "Đăng nhập thành công",
       accessToken,
       refreshToken,
-      user: { user_id: user.user_id, email: user.email, phone_number: user.phone_number, username: user.username, address: user.address, birthday: user.birthday, role: user.role },
+      user: {
+        user_id: user.user_id,
+        email: user.email,
+        phone_number: user.phone_number,
+        username: user.username,
+        address: user.address,
+        birthday: user.birthday,
+        role: user.role,
+        avatar_url: user.avatar_url
+      }
     });
+
   } catch (err) {
-    if (err && err.status) return res.status(err.status).json({ message: err.message });
+    if (err && err.status)
+      return res.status(err.status).json({ message: err.message });
     next(err);
   }
 }
+
 
 export async function githubSignIn(req, res, next) {
   const platform = req.query.platform || "web"; // web | mobile
