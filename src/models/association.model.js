@@ -126,17 +126,17 @@ export default function initAssociations() {
   // -----------------------------
   // COMMENTS
   // -----------------------------
-  Task.hasMany(Comment, { foreignKey: "task_id", as: "taskComments" });
-  Comment.belongsTo(Task, { foreignKey: "task_id", as: "task" });
+Task.hasMany(Comment, { foreignKey: "task_id", as: "comments" });
+Comment.belongsTo(Task, { foreignKey: "task_id", as: "task" });
 
-  User.hasMany(Comment, { foreignKey: "user_id", as: "userComments" });
-  Comment.belongsTo(User, { foreignKey: "user_id", as: "author" });
+User.hasMany(Comment, { foreignKey: "user_id", as: "comments"});
+Comment.belongsTo(User, { foreignKey: "user_id", as: "author" }); 
 
-  Comment.hasMany(CommentHistory, { foreignKey: "comment_id", as: "commentHistory" });
-  CommentHistory.belongsTo(Comment, { foreignKey: "comment_id", as: "comment" });
+Comment.hasMany(CommentHistory, { foreignKey: "comment_id", as: "history" });
+CommentHistory.belongsTo(Comment, { foreignKey: "comment_id", as: "comment" });
 
-  CommentHistory.belongsTo(User, { foreignKey: "edited_by_user_id", as: "editor" });
-  User.hasMany(CommentHistory, { foreignKey: "edited_by_user_id", as: "editedComments" });
+User.hasMany(CommentHistory, { foreignKey: "edited_by_user_id", as: "editHistory" });
+CommentHistory.belongsTo(User, { foreignKey: "edited_by_user_id", as: "editor" });
 
   // -----------------------------
   // PERFORMANCE (UPDATED)

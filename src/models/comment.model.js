@@ -7,6 +7,7 @@ export const Comment = sequelize.define('Comment', {
     autoIncrement: true,
     primaryKey: true
   },
+
   task_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -17,6 +18,7 @@ export const Comment = sequelize.define('Comment', {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE'
   },
+
   user_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -27,10 +29,16 @@ export const Comment = sequelize.define('Comment', {
     onUpdate: 'CASCADE',
     onDelete: 'RESTRICT'
   },
+
   content: {
     type: DataTypes.TEXT,
     allowNull: false
   },
+  is_edited: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+
   created_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
@@ -40,7 +48,7 @@ export const Comment = sequelize.define('Comment', {
     defaultValue: DataTypes.NOW
   }
 }, {
-  tableName: 'comment',
+  tableName: 'comments', 
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',

@@ -5,25 +5,29 @@ import GroupRouter from './group.routes.js';
 import ProjectRouter from './project.routes.js';
 import PerformanceRouter from './performance.routes.js';
 import SubTaskRouter from './subtask.route.js';
+import CommentRouter from './comment.routes.js';
 
 const router = Router();
 
-router.use('/auth', AuthRouter);
+router.use("/auth", AuthRouter);
 
 
-router.use('/tasks', TaskRouter);
+router.use("/tasks", TaskRouter);
 
 
-router.use('/projects', ProjectRouter);
+router.use("/projects", ProjectRouter);
 
 
-router.use('/groups', GroupRouter);
+router.use("/groups", GroupRouter);
 
 
-router.use('/performance', PerformanceRouter);
+router.use("/performance", PerformanceRouter);
 
 
-router.use('/subtask', SubTaskRouter);
+router.use("/subtask", SubTaskRouter);
+
+
+router.use("/comments", CommentRouter);
 
 
 export default router;

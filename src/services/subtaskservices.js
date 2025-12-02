@@ -1,5 +1,6 @@
 import { Task } from '../models/task.model.js';
 import { Subtask } from '../models/subtask.model.js';
+import { updateTaskStatusIfSubtasksCompleted } from '../controllers/task.controller.js';
 
 
 export async function createSubtaskService(task_id, { title, description, priority, status }) {
@@ -65,6 +66,7 @@ export async function updateSubtaskService(subtask_id, updateData) {
     }
     Object.assign(subtask, validUpdates);
     await subtask.save();
+    await updateTaskStatusIfSubtasksCompleted(subtask.task_id);
     return subtask;
 }
 
