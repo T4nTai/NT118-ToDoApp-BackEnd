@@ -8,9 +8,9 @@ CREATE SCHEMA IF NOT EXISTS `todo`
 
 USE `todo`;
 
--- ==============================
--- Users
--- ==============================
+-- ============================================================
+-- USERS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `users` (
   `user_id` INT NOT NULL AUTO_INCREMENT,
   `email` VARCHAR(100) NOT NULL UNIQUE,
@@ -32,6 +32,9 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ============================================================
+-- WORKSPACES
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `workspaces` (
   `workspace_id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(150) NOT NULL,
@@ -41,39 +44,44 @@ CREATE TABLE IF NOT EXISTS `workspaces` (
   PRIMARY KEY (`workspace_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
+-- ============================================================
+-- WORKSPACE MEMBERS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `workspace_members` (
   `workspace_id` INT NOT NULL,
   `user_id` INT NOT NULL,
   `workspace_role` ENUM('Owner', 'Admin', 'Member', 'Viewer') NOT NULL DEFAULT 'Member',
   `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`workspace_id`, `user_id`),
+
   FOREIGN KEY (`workspace_id`)
     REFERENCES `workspaces` (`workspace_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
+
   FOREIGN KEY (`user_id`)
     REFERENCES `users` (`user_id`)
-    ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (`workspace_role_id`)
-    REFERENCES `workspace_roles` (`workspace_role_id`)
-    ON DELETE RESTRICT ON UPDATE CASCADE
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Groups
--- ==============================
+-- ============================================================
+-- GROUPS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `groups` (
   `group_id` INT NOT NULL AUTO_INCREMENT,
   `workspace_id` INT NOT NULL,
   `name` VARCHAR(100) NOT NULL,
   `description` TEXT,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`group_id`)
+  PRIMARY KEY (`group_id`),
+
+  FOREIGN KEY (`workspace_id`)
+    REFERENCES `workspaces` (`workspace_id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Group Members
--- ==============================
+-- ============================================================
+-- GROUP MEMBERS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `group_members` (
   `group_id` INT NOT NULL,
   `user_id` INT NOT NULL,
@@ -81,21 +89,22 @@ CREATE TABLE IF NOT EXISTS `group_members` (
   `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`group_id`, `user_id`),
   INDEX `idx_gm_user` (`user_id`),
-  CONSTRAINT `fk_gm_group`
-    FOREIGN KEY (`group_id`)
+
+  FOREIGN KEY (`group_id`)
     REFERENCES `groups` (`group_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_gm_user`
-    FOREIGN KEY (`user_id`)
+
+  FOREIGN KEY (`user_id`)
     REFERENCES `users` (`user_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Projects
--- ==============================
+-- ============================================================
+-- PROJECTS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `projects` (
   `project_id` INT NOT NULL AUTO_INCREMENT,
+  `workspace_id` INT NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `description` TEXT,
   `status` ENUM('Active', 'On Hold', 'Completed', 'Archived') NOT NULL DEFAULT 'Active',
@@ -107,71 +116,68 @@ CREATE TABLE IF NOT EXISTS `projects` (
   `start_date` DATE,
   `due_date` DATE,
   PRIMARY KEY (`project_id`),
+
   INDEX `idx_proj_owner` (`owner_id`),
   INDEX `idx_proj_group_assign` (`assigned_group_id`),
   INDEX `idx_proj_user_assign` (`assigned_user_id`),
 
-  CONSTRAINT `fk_proj_owner`
-    FOREIGN KEY (`owner_id`)
+  FOREIGN KEY (`workspace_id`)
+    REFERENCES `workspaces` (`workspace_id`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (`owner_id`)
     REFERENCES `users` (`user_id`)
     ON DELETE RESTRICT ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_proj_assigned_group`
-    FOREIGN KEY (`assigned_group_id`)
+  FOREIGN KEY (`assigned_group_id`)
     REFERENCES `groups` (`group_id`)
     ON DELETE SET NULL ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_proj_assigned_user`
-    FOREIGN KEY (`assigned_user_id`)
+  FOREIGN KEY (`assigned_user_id`)
     REFERENCES `users` (`user_id`)
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Project - Groups (Many-to-Many)
--- ==============================
+-- ============================================================
+-- PROJECT - GROUPS (Many-to-Many)
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `project_groups` (
   `project_id` INT NOT NULL,
   `group_id` INT NOT NULL,
   PRIMARY KEY (`project_id`, `group_id`),
   INDEX `idx_pg_group` (`group_id`),
 
-  CONSTRAINT `fk_pg_project`
-    FOREIGN KEY (`project_id`)
+  FOREIGN KEY (`project_id`)
     REFERENCES `projects` (`project_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_pg_group`
-    FOREIGN KEY (`group_id`)
+  FOREIGN KEY (`group_id`)
     REFERENCES `groups` (`group_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Project Members
--- ==============================
+-- ============================================================
+-- PROJECT MEMBERS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `project_members` (
   `project_id` INT NOT NULL,
   `user_id` INT NOT NULL,
   `role` ENUM('Owner', 'Manager', 'Contributor', 'Viewer') NOT NULL DEFAULT 'Contributor',
   `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`, `user_id`),
-  INDEX `idx_pm_user` (`user_id`),
 
-  CONSTRAINT `fk_pm_project`
-    FOREIGN KEY (`project_id`)
+  FOREIGN KEY (`project_id`)
     REFERENCES `projects` (`project_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_pm_user`
-    FOREIGN KEY (`user_id`)
+  FOREIGN KEY (`user_id`)
     REFERENCES `users` (`user_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Milestones
--- ==============================
+-- ============================================================
+-- MILESTONES
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `milestones` (
   `milestone_id` INT NOT NULL AUTO_INCREMENT,
   `project_id` INT NOT NULL,
@@ -181,27 +187,23 @@ CREATE TABLE IF NOT EXISTS `milestones` (
   `is_completed` TINYINT(1) DEFAULT 0,
   `completed_at` DATETIME,
   PRIMARY KEY (`milestone_id`),
-  INDEX `idx_mil_project` (`project_id`),
 
-  CONSTRAINT `fk_mil_project`
-    FOREIGN KEY (`project_id`)
+  FOREIGN KEY (`project_id`)
     REFERENCES `projects` (`project_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Workflows (gắn với Project, không gắn Group)
--- ==============================
+-- ============================================================
+-- WORKFLOWS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `workflows` (
   `workflow_id` INT NOT NULL AUTO_INCREMENT,
   `project_id` INT NOT NULL,
   `name` VARCHAR(100) NOT NULL,
   `description` TEXT,
   PRIMARY KEY (`workflow_id`),
-  INDEX `idx_wf_project` (`project_id`),
 
-  CONSTRAINT `fk_wf_project`
-    FOREIGN KEY (`project_id`)
+  FOREIGN KEY (`project_id`)
     REFERENCES `projects` (`project_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -212,24 +214,22 @@ CREATE TABLE IF NOT EXISTS `workflow_steps` (
   `name` VARCHAR(100) NOT NULL,
   `step_order` INT NOT NULL,
   PRIMARY KEY (`step_id`),
-  INDEX `idx_ws_wf` (`workflow_id`),
-  CONSTRAINT `fk_ws_wf`
-    FOREIGN KEY (`workflow_id`)
+
+  FOREIGN KEY (`workflow_id`)
     REFERENCES `workflows` (`workflow_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Tasks (KHÔNG còn group_id, KHÔNG còn status ENUM, dùng step_id)
--- ==============================
+-- ============================================================
+-- TASKS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `tasks` (
   `task_id` INT NOT NULL AUTO_INCREMENT,
-  `project_id` INT NULL,             
-  `milestone_id` INT NULL,             
+  `project_id` INT NULL,
+  `milestone_id` INT NULL,
   `title` VARCHAR(255) NOT NULL,
   `description` TEXT,
-  `priority` ENUM('Low', 'Medium', 'High', 'Critical') 
-      NOT NULL DEFAULT 'Medium',
+  `priority` ENUM('Low', 'Medium', 'High', 'Critical') NOT NULL DEFAULT 'Medium',
   `task_progress` DECIMAL(5,2) DEFAULT 0.00,
   `created_by` INT NOT NULL,
   `assigned_to` INT NULL,
@@ -239,43 +239,32 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `start_date` DATE,
   `due_date` DATE,
-
   PRIMARY KEY (`task_id`),
-  INDEX `idx_task_project` (`project_id`),
-  INDEX `idx_task_milestone` (`milestone_id`),
-  INDEX `idx_task_created_by` (`created_by`),
-  INDEX `idx_task_assigned_to` (`assigned_to`),
-  INDEX `idx_task_status` (`status`),
-  INDEX `idx_task_step` (`step_id`),
-  CONSTRAINT `fk_task_project`
-    FOREIGN KEY (`project_id`)
+
+  FOREIGN KEY (`project_id`)
     REFERENCES `projects` (`project_id`)
     ON DELETE SET NULL ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_task_milestone`
-    FOREIGN KEY (`milestone_id`)
+  FOREIGN KEY (`milestone_id`)
     REFERENCES `milestones` (`milestone_id`)
     ON DELETE SET NULL ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_task_created_by`
-    FOREIGN KEY (`created_by`)
+  FOREIGN KEY (`created_by`)
     REFERENCES `users` (`user_id`)
     ON DELETE RESTRICT ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_task_assigned_to`
-    FOREIGN KEY (`assigned_to`)
+  FOREIGN KEY (`assigned_to`)
     REFERENCES `users` (`user_id`)
     ON DELETE SET NULL ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_task_step`
-    FOREIGN KEY (`step_id`)
+  FOREIGN KEY (`step_id`)
     REFERENCES `workflow_steps` (`step_id`)
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Subtasks
--- ==============================
+-- ============================================================
+-- SUBTASKS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `subtasks` (
   `subtask_id` INT NOT NULL AUTO_INCREMENT,
   `task_id` INT NOT NULL,
@@ -285,17 +274,15 @@ CREATE TABLE IF NOT EXISTS `subtasks` (
   `status` ENUM('To Do', 'In Progress', 'Review', 'Done', 'Blocked') NOT NULL DEFAULT 'To Do',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`subtask_id`),
-  INDEX `idx_subtask_task` (`task_id`),
 
-  CONSTRAINT `fk_subtask_task`
-    FOREIGN KEY (`task_id`)
+  FOREIGN KEY (`task_id`)
     REFERENCES `tasks` (`task_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Task History
--- ==============================
+-- ============================================================
+-- TASK HISTORY
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `task_history` (
   `history_id` INT NOT NULL AUTO_INCREMENT,
   `task_id` INT NOT NULL,
@@ -305,23 +292,19 @@ CREATE TABLE IF NOT EXISTS `task_history` (
   `new_value` TEXT,
   `changed_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`history_id`),
-  INDEX `idx_th_task` (`task_id`),
-  INDEX `idx_th_changed_by` (`changed_by_user_id`),
 
-  CONSTRAINT `fk_th_task`
-    FOREIGN KEY (`task_id`)
+  FOREIGN KEY (`task_id`)
     REFERENCES `tasks` (`task_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_th_user`
-    FOREIGN KEY (`changed_by_user_id`)
+  FOREIGN KEY (`changed_by_user_id`)
     REFERENCES `users` (`user_id`)
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Comments
--- ==============================
+-- ============================================================
+-- COMMENTS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `comments` (
   `comment_id` INT NOT NULL AUTO_INCREMENT,
   `task_id` INT NOT NULL,
@@ -329,52 +312,40 @@ CREATE TABLE IF NOT EXISTS `comments` (
   `content` TEXT NOT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
   PRIMARY KEY (`comment_id`),
 
-  INDEX `idx_comment_task` (`task_id`),
-  INDEX `idx_comment_user` (`user_id`),
-
-  CONSTRAINT `fk_comment_task`
-    FOREIGN KEY (`task_id`)
+  FOREIGN KEY (`task_id`)
     REFERENCES `tasks` (`task_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_comment_user`
-    FOREIGN KEY (`user_id`)
+  FOREIGN KEY (`user_id`)
     REFERENCES `users` (`user_id`)
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Comment History
--- ==============================
+-- ============================================================
+-- COMMENT HISTORY
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `comments_history` (
   `comment_history_id` INT NOT NULL AUTO_INCREMENT,
   `comment_id` INT NOT NULL,
   `edited_by_user_id` INT NOT NULL,
   `old_content` TEXT NOT NULL,
   `edited_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-
   PRIMARY KEY (`comment_history_id`),
 
-  INDEX `idx_ch_comment` (`comment_id`),
-  INDEX `idx_ch_user` (`edited_by_user_id`),
-
-  CONSTRAINT `fk_ch_comment`
-    FOREIGN KEY (`comment_id`)
-    REFERENCES `comments` (`comment_id`) 
+  FOREIGN KEY (`comment_id`)
+    REFERENCES `comments` (`comment_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_ch_user`
-    FOREIGN KEY (`edited_by_user_id`)
+  FOREIGN KEY (`edited_by_user_id`)
     REFERENCES `users` (`user_id`)
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Performance Records
--- ==============================
+-- ============================================================
+-- PERFORMANCE RECORDS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `performance_record` (
   `performance_id` INT NOT NULL AUTO_INCREMENT,
   `project_id` INT NULL,
@@ -385,35 +356,27 @@ CREATE TABLE IF NOT EXISTS `performance_record` (
   `created_by` INT NOT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`performance_id`),
-  INDEX `idx_pr_project` (`project_id`),
-  INDEX `idx_pr_group` (`group_id`),
-  INDEX `idx_pr_user` (`user_id`),
-  INDEX `idx_pr_created_by` (`created_by`),
 
-  CONSTRAINT `fk_pr_project`
-    FOREIGN KEY (`project_id`)
+  FOREIGN KEY (`project_id`)
     REFERENCES `projects` (`project_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_pr_group`
-    FOREIGN KEY (`group_id`)
+  FOREIGN KEY (`group_id`)
     REFERENCES `groups` (`group_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_pr_user`
-    FOREIGN KEY (`user_id`)
+  FOREIGN KEY (`user_id`)
     REFERENCES `users` (`user_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
 
-  CONSTRAINT `fk_pr_created_by`
-    FOREIGN KEY (`created_by`)
+  FOREIGN KEY (`created_by`)
     REFERENCES `users` (`user_id`)
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==============================
--- Refresh Tokens
--- ==============================
+-- ============================================================
+-- REFRESH TOKENS
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `refresh_token` (
   `refresh_token_id` INT NOT NULL AUTO_INCREMENT,
   `token` VARCHAR(512) NOT NULL UNIQUE,
@@ -423,10 +386,8 @@ CREATE TABLE IF NOT EXISTS `refresh_token` (
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`refresh_token_id`),
-  INDEX `idx_rt_user_id` (`user_id`),
 
-  CONSTRAINT `fk_refresh_token_user`
-    FOREIGN KEY (`user_id`)
+  FOREIGN KEY (`user_id`)
     REFERENCES `users` (`user_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
