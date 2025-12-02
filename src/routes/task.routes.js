@@ -14,6 +14,4 @@ TaskRouter.patch("/:task_id", authenticateJWT, updateTask);
 
 TaskRouter.delete("/:task_id", authenticateJWT, deleteTask);
 
-TaskRouter.patch("/:task_id/status", authenticateJWT, changeTaskStatus);
-
 export default TaskRouter;

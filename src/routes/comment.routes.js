@@ -1,4 +1,4 @@
-import { authenticateJWT } from "../middleware/auth.middleware";
+import { authenticateJWT } from "../middleware/auth.middleware.js";
 import { Router } from "express";
 import { createComment, getCommentsByTask, updateComment, deleteComment, getCommentHistory } from "../controllers/comment.controller.js";
 
