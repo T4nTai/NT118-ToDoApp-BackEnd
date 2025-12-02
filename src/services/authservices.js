@@ -166,6 +166,7 @@ export async function updateUserProfileService(user_id, updates) {
     "username",
     "address",
     "birthday",
+    "gender",
     "github_access_token"
   ];
 
