@@ -36,7 +36,7 @@ export const CommentHistory = sequelize.define('CommentHistory', {
     defaultValue: DataTypes.NOW
   }
 }, {
-  tableName: 'comment_history',
+  tableName: 'comments_history',
   timestamps: false,
   indexes: [
     { fields: ['comment_id'] },

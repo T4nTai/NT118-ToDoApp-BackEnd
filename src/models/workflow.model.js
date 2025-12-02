@@ -7,28 +7,31 @@ export const Workflow = sequelize.define('Workflow', {
     autoIncrement: true,
     primaryKey: true
   },
-  group_id: {
+  project_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'groups',
-      key: 'group_id'
+      model: 'projects',
+      key: 'project_id'
     },
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE'
   },
+
   name: {
     type: DataTypes.STRING(100),
     allowNull: false
   },
+
   description: {
     type: DataTypes.TEXT,
     allowNull: true
   }
+
 }, {
   tableName: 'workflows',
   timestamps: false,
   indexes: [
-    { fields: ['group_id'] }
+    { fields: ['project_id'] }
   ]
 });

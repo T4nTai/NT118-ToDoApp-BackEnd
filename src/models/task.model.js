@@ -7,22 +7,13 @@ export const Task = sequelize.define('Task', {
     autoIncrement: true,
     primaryKey: true
   },
+
   project_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
       model: 'projects',
       key: 'project_id'
-    },
-    onUpdate: 'CASCADE',
-    onDelete: 'SET NULL'
-  },
-  group_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'groups',
-      key: 'group_id'
     },
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL'
@@ -48,11 +39,10 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.TEXT,
     allowNull: true
   },
-
   status: {
-    type: DataTypes.ENUM('To Do', 'In Progress', 'Review', 'Done', 'Blocked'),
-    allowNull: false,
-    defaultValue: 'To Do'
+    type: DataTypes.ENUM('To Do', 'In Progress', 'Done'),
+    allowNull: true,              
+    defaultValue: null            
   },
 
   task_progress: {
@@ -60,11 +50,11 @@ export const Task = sequelize.define('Task', {
     allowNull: false,
     defaultValue: 0.00
   },
-  
+
   priority: {
-  type: DataTypes.ENUM('Low', 'Medium', 'High', 'Critical'),
-  allowNull: false,
-  defaultValue: 'Medium'
+    type: DataTypes.ENUM('Low', 'Medium', 'High', 'Critical'),
+    allowNull: false,
+    defaultValue: 'Medium'
   },
 
   created_by: {
@@ -91,7 +81,7 @@ export const Task = sequelize.define('Task', {
 
   step_id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: true,             
     references: {
       model: 'workflow_steps',
       key: 'step_id'
@@ -104,6 +94,7 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
   },
+
   updated_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
@@ -113,10 +104,12 @@ export const Task = sequelize.define('Task', {
     type: DataTypes.DATEONLY,
     allowNull: true
   },
+
   due_date: {
     type: DataTypes.DATEONLY,
     allowNull: true
   }
+
 }, {
   tableName: 'tasks',
   timestamps: true,
@@ -124,10 +117,10 @@ export const Task = sequelize.define('Task', {
   updatedAt: 'updated_at',
   indexes: [
     { fields: ['project_id'] },
-    { fields: ['group_id'] },    
     { fields: ['milestone_id'] },
     { fields: ['created_by'] },
     { fields: ['assigned_to'] },
-    { fields: ['step_id'] }
+    { fields: ['step_id'] },
+    { fields: ['status'] }
   ]
 });
