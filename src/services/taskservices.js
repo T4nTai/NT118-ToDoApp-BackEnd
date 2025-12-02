@@ -10,6 +10,22 @@ export async function createTaskService({ title, description, project_id, group_
         throw { status: 400, message: "Thiếu title hoặc created_by" };
     }
     let step_id = null;
+    if (!project_id) {
+        const task = await Task.create({
+            title,
+            description: description || null,
+            project_id: null,
+            milestone_id: milestone_id || null,
+            created_by,
+            assigned_to: assigned_to || null,
+            priority: priority || "Medium",
+            start_date: start_date || null,
+            due_date: due_date || null,
+            step_id: null 
+        });
+
+        return task;
+    }
     if (project_id) {
         const project = await Project.findByPk(project_id);
         if (!project) {
