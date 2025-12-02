@@ -3,8 +3,7 @@ export const generateInviteEmail = ({
   inviterName,
   targetType,      
   targetName,
-  role,
-  acceptUrl
+  role
 }) => {
   const currentYear = new Date().getFullYear();
 
@@ -13,7 +12,7 @@ export const generateInviteEmail = ({
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Lời mời tham gia ${targetType}</title>
+  <title>Thông báo thêm vào ${targetType}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { background:#f5f6fa; font-family:Arial; margin:0; padding:0; }
@@ -25,34 +24,30 @@ export const generateInviteEmail = ({
       background:#f0f3f7; border-left:4px solid #4a90e2;
       padding:15px; margin:20px 0; border-radius:6px;
     }
-    .btn { display:inline-block; background:#4a90e2; color:#fff;
-      padding:12px 22px; border-radius:6px; text-decoration:none; }
     .footer { text-align:center; padding:20px; color:#666; font-size:13px; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h2>Lời mời tham gia ${targetType}</h2>
+      <h2>Bạn đã được thêm vào ${targetType}</h2>
     </div>
+
     <div class="content">
       <p>Xin chào <b>${receiverEmail}</b>,</p>
 
-      <p><b>${inviterName}</b> đã mời bạn tham gia vào ${targetType.toLowerCase()}:</p>
+      <p><b>${inviterName}</b> đã thêm bạn vào ${targetType.toLowerCase()}:</p>
 
       <div class="highlight-box">
         <b>${targetName}</b><br>
-        Vai trò: <b>${role}</b>
+        Vai trò của bạn: <b>${role}</b>
       </div>
 
-      <p>Nhấn vào nút dưới đây để chấp nhận lời mời:</p>
+      <p>Bạn không cần thực hiện thao tác nào thêm.</p>
+      <p>Hãy truy cập ứng dụng để bắt đầu cộng tác cùng mọi người.</p>
 
-      <p style="text-align:center">
-        <a href="${acceptUrl}" class="btn">Chấp nhận lời mời</a>
-      </p>
-
-      <p>Nếu bạn không nhận ra lời mời này, hãy bỏ qua email.</p>
     </div>
+
     <div class="footer">
       <p>Email tự động – vui lòng không trả lời.</p>
       <p>&copy; ${currentYear} Team 04 Mobile.</p>

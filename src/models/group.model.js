@@ -7,10 +7,6 @@ export const Group = sequelize.define("Group", {
     autoIncrement: true,
     primaryKey: true
   },
-  workspace_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
   name: {                               
     type: DataTypes.STRING(100),
     allowNull: false
@@ -24,6 +20,6 @@ export const Group = sequelize.define("Group", {
     defaultValue: DataTypes.NOW
   }
 }, {
-  tableName: "groups",
+  tableName: "user_groups",
   timestamps: false
 });

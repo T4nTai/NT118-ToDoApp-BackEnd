@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { generateResetPasswordEmail } from "../ultis/reset_password_email_template.js";
 import { transporter } from "../config/mail.js";
 import { Op } from "sequelize";
-
+import cloudinary from "../config/cloudinary.js";
 
 function generateAccessToken(user) {
   return jwt.sign(
@@ -159,37 +159,77 @@ export async function getUserByIdService(user_id) {
   return user;
 }
 
-export async function updateUserProfileService(
-  user_id,
-  { email, phone_number, username, address, birthday }
-) {
+export async function updateUserProfileService(user_id, updates) {
+  const ALLOWED_FIELDS = [
+  "email",
+  "phone_number",
+  "username",
+  "address",
+  "birthday",
+  "github_access_token"
+  ];
   const user = await User.findByPk(user_id);
-  if (!user) {
-    throw { status: 404, message: "Người dùng không tồn tại" };
-  }
-
-  if (email) {
+  if (!user) throw { status: 404, message: "Người dùng không tồn tại" };
+  if (updates.email) {
     const emailExist = await User.findOne({
-      where: { email, user_id: { [Op.ne]: user_id } }
+      where: { email: updates.email, user_id: { [Op.ne]: user_id } },
     });
     if (emailExist) throw { status: 400, message: "Email đã tồn tại" };
-    user.email = email;
+    user.email = updates.email;
   }
-
-  if (phone_number) {
+  if (updates.phone_number) {
     const phoneExist = await User.findOne({
-      where: { phone_number, user_id: { [Op.ne]: user_id } }
+      where: { phone_number: updates.phone_number, user_id: { [Op.ne]: user_id } },
     });
     if (phoneExist) throw { status: 400, message: "Số điện thoại đã tồn tại" };
-    user.phone_number = phone_number;
+    user.phone_number = updates.phone_number;
   }
 
-  if (username) user.username = username;
-  if (address) user.address = address;
-  if (birthday) user.birthday = birthday;
+  for (const key of ALLOWED_FIELDS) {
+    if (updates[key] !== undefined && key !== "email" && key !== "phone_number") {
+      user[key] = updates[key];
+    }
+  }
+
+  if (updates.avatar_base64) {
+    try {
+      if (user.avatar_public_id) {
+        await cloudinary.uploader.destroy(user.avatar_public_id);
+      }
+
+      const upload = await cloudinary.uploader.upload(updates.avatar_base64, {
+        folder: "todoapp/avatar",
+      });
+
+      user.avatar_url = upload.secure_url;
+      user.avatar_public_id = upload.public_id;
+
+    } catch (err) {
+      console.log("Lỗi upload avatar:", err);
+      throw { status: 500, message: "Không thể upload avatar" };
+    }
+  }
+
+  if (updates.delete_avatar === true) {
+    if (user.avatar_public_id) {
+      try {
+        await cloudinary.uploader.destroy(user.avatar_public_id);
+      } catch (err) {
+        console.log("Không thể xóa avatar:", err);
+      }
+    }
+    user.avatar_url = null;
+    user.avatar_public_id = null;
+  }
 
   await user.save();
-  return user;
+
+  const safeUser = user.toJSON();
+  delete safeUser.password;
+  delete safeUser.reset_token;
+  delete safeUser.reset_expires;
+
+  return safeUser;
 }
 
 export async function getUserIdByEmailService(email) {
@@ -262,3 +302,4 @@ export async function resetPasswordService(token, newPassword) {
 
   return { message: "Mật khẩu đã được đặt lại thành công" };
 }
+

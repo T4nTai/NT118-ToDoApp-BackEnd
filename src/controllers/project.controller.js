@@ -1,22 +1,35 @@
-import { createProjectService, getProjectsByOwnerService, addProjectMemberService, assginTaskToProjectMemberService, getTasksByProjectService } from '../services/projectservices.js'
-import { getUserIdByEmailService } from '../services/authservices.js';
-
+import {
+    createProjectService,
+    getProjectsByOwnerService,
+    assignProjectToGroupService,
+    assignProjectToUserService,
+    updateProjectService,
+    deleteProjectService
+} from "../services/projectservices.js";
 
 export async function createProject(req, res, next) {
     try {
-        const { project_name, project_status, start_date, due_date } = req.body;
+        const { name, description, status, priority, start_date, due_date } = req.body;
         const owner_id = req.user.id;
-        const group_id = req.params.group_id;
-        const newProject = await createProjectService({ project_name, project_status, start_date, due_date, owner_id, group_id });
-        return res.status(201).json({
-            message: "Dự án đã được tạo thành công",
-            project: newProject
+        const project = await createProjectService({
+            name,
+            description,
+            status,
+            priority,
+            start_date,
+            due_date,
+            owner_id
+        });
+        res.status(201).json({
+            message: "Tạo dự án thành công",
+            project
         });
     } catch (err) {
-        if (err && err.status) return res.status(err.status).json({ message: err.message });
+        if (err.status) return res.status(err.status).json({ message: err.message });
         next(err);
     }
 }
+
 
 export async function getProjectsByOwner(req, res, next) {
     try {
@@ -24,49 +37,80 @@ export async function getProjectsByOwner(req, res, next) {
         const projects = await getProjectsByOwnerService(owner_id);
         return res.status(200).json({ projects });
     } catch (err) {
-        if (err && err.status) return res.status(err.status).json({ message: err.message });
+        if (err.status) return res.status(err.status).json({ message: err.message });
         next(err);
     }
 }
 
 
-export async function addProjectMember(req, res, next) {
+export async function updateProject(req, res, next) {
     try {
-        const { project_id, email, role } = req.body;
-        const user_id = await getUserIdByEmailService(email);
-        const projectMember = await addProjectMemberService(project_id, user_id, role);
-        return res.status(201).json({
-            message: "Thành viên đã được thêm vào dự án",
-            projectMember
+        const { project_id } = req.params;
+        const owner_id = req.user.id;
+        const updates = req.body;
+
+        const project = await updateProjectService(project_id, owner_id, updates);
+
+        res.json({
+            message: "Cập nhật dự án thành công",
+            project
         });
     } catch (err) {
-        if (err && err.status) return res.status(err.status).json({ message: err.message });
+        if (err.status) return res.status(err.status).json({ message: err.message });
         next(err);
     }
 }
 
-export async function assignTaskToProjectMember(req, res, next) {
+
+export async function assignProjectToGroup(req, res, next) {
     try {
-        const { task_id, project_id, email } = req.body;
-        const user_id = await getUserIdByEmailService(email);
-        const updatedTask = await assginTaskToProjectMemberService(task_id, project_id, user_id);
+        const { project_id, group_id } = req.body;
+        const inviter_id = req.user.id;
+
+        const project = await assignProjectToGroupService(project_id, group_id, inviter_id);
+
         return res.status(200).json({
-            message: "Công việc đã được giao cho thành viên dự án",
-            task: updatedTask
+            message: "Dự án đã được giao cho nhóm",
+            project
         });
+
     } catch (err) {
-        if (err && err.status) return res.status(err.status).json({ message: err.message });
+        if (err.status) return res.status(err.status).json({ message: err.message });
         next(err);
     }
 }
 
-export async function getTasksByProject(req, res, next) {
+
+export async function assignProjectToUser(req, res, next) {
     try {
-        const project_id = req.params.project_id;
-        const tasks = await getTasksByProjectService(project_id);
-        return res.status(200).json({ tasks });
+        const { project_id, user_id } = req.body;
+        const inviter_id = req.user.id;
+
+        const project = await assignProjectToUserService(project_id, user_id, inviter_id);
+
+        return res.status(200).json({
+            message: "Dự án đã được giao cho người dùng",
+            project
+        });
+
     } catch (err) {
-        if (err && err.status) return res.status(err.status).json({ message: err.message });
+        if (err.status) return res.status(err.status).json({ message: err.message });
+        next(err);
+    }
+}
+
+
+export async function deleteProject(req, res, next) {
+    try {
+        const { project_id } = req.params;
+        const owner_id = req.user.id;
+
+        const result = await deleteProjectService(project_id, owner_id);
+
+        return res.status(200).json(result);
+
+    } catch (err) {
+        if (err.status) return res.status(err.status).json({ message: err.message });
         next(err);
     }
 }

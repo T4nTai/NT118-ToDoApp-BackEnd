@@ -7,18 +7,6 @@ export const Project = sequelize.define('Project', {
     autoIncrement: true,
     primaryKey: true
   },
-
-  workspace_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'workspaces',
-      key: 'workspace_id'
-    },
-    onUpdate: 'CASCADE',
-    onDelete: 'CASCADE'
-  },
-
   assigned_group_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
