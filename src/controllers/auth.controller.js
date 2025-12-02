@@ -108,15 +108,19 @@ export async function updateUserProfile(req, res, next) {
   try {
     const updatedUser = await updateUserProfileService(user_id, req.body);
     return res.status(200).json({
-      email: updatedUser.email,
-      phone_number: updatedUser.phone_number,
-      username: updatedUser.username,
-      address: updatedUser.address,
-      birthday: updatedUser.birthday,
-      message: "Cập nhật thông tin người dùng thành công"
+      message: "Cập nhật thông tin người dùng thành công",
+      user: {
+        email: updatedUser.email,
+        phone_number: updatedUser.phone_number,
+        username: updatedUser.username,
+        address: updatedUser.address,
+        birthday: updatedUser.birthday,
+        avatar_url: updatedUser.avatar_url
+      }
     });
-  } catch (err) { 
-    if (err && err.status) return res.status(err.status).json({ message: err.message });
+
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ message: err.message });
     next(err);
   }
 }
