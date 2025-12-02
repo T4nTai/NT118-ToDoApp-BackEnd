@@ -1,4 +1,4 @@
-import { createTaskService, viewTasksByUserService, assignTaskService, updateTaskService, deleteTaskService } from "../services/taskservices.js";
+import { createTaskService, viewTasksAssignToService, assignTaskService, updateTaskService, deleteTaskService, viewTasksCreatedByUserService } from "../services/taskservices.js";
   
 
 export async function createTask(req, res, next) {
@@ -17,18 +17,32 @@ export async function createTask(req, res, next) {
 }
 
 
-export async function viewTasksByUser(req, res, next) {
+export async function viewTasksAssignToUser(req, res, next) {
     try {
         const user_id = req.user.id;
         const { status } = req.query;
 
-        const tasks = await viewTasksByUserService(user_id, status);
+        const tasks = await viewTasksAssignToService(user_id, status);
 
         return res.status(200).json({ tasks });
     } catch (err) {
         if (err && err.status)
             return res.status(err.status).json({ message: err.message });
         next(err);
+    }
+}
+
+export async function viewTasksCreatedByUser(req, res, next) {
+  try {
+    const user_id = req.user.id;
+    const { status } = req.query;
+    const tasks = await viewTasksCreatedByUserService(user_id, status);
+
+    return res.status(200).json({ tasks });
+  } catch (err) {
+    if (err && err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
     }
 }
 

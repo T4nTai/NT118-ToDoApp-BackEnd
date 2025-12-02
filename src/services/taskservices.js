@@ -75,7 +75,7 @@ export async function createTaskService({ title, description, project_id, group_
     return task;
 }
 
-export async function viewTasksByUserService(user_id, statusFilter) {
+export async function viewTasksAssignToService(user_id, statusFilter) {
   const tasks = await Task.findAll({
     where: {
       assigned_to: user_id,
@@ -91,6 +91,25 @@ export async function viewTasksByUserService(user_id, statusFilter) {
 
   return tasks;
 }
+
+export async function viewTasksCreatedByUserService(user_id, statusFilter) {
+  const tasks = await Task.findAll({
+    where: {
+      created_by: user_id,
+      ...(statusFilter && { status: statusFilter })
+    },
+    include: [
+      { model: User, as: "creator", attributes: ["user_id", "username", "email"] },
+      { model: User, as: "assignee", attributes: ["user_id", "username", "email"] },
+      { model: Project, as: "project", attributes: ["project_id", "name"] },
+      { model: Subtask, as: "subtasks" }
+    ],
+    order: [["created_at", "DESC"]]
+  });
+
+  return tasks;
+}
+
 
 export async function assignTaskService(task_id, user_id) {
     const task = await Task.findByPk(task_id);
