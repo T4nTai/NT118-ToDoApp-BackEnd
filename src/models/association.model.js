@@ -17,9 +17,9 @@ import { CommentHistory } from './comment_history.model.js';
 
 export default function initAssociations() {
 
-  // -----------------------------
+  // ======================================================
   // GROUP – MEMBERS
-  // -----------------------------
+  // ======================================================
   Group.hasMany(GroupMember, { foreignKey: "group_id", as: "groupMembers" });
   GroupMember.belongsTo(Group, { foreignKey: "group_id", as: "group" });
 
@@ -40,18 +40,20 @@ export default function initAssociations() {
     as: "groups"
   });
 
-  // -----------------------------
-  // WORKFLOW – STEPS
-  // -----------------------------
-  Workflow.belongsTo(Group, { foreignKey: "group_id", as: "group" });
-  Group.hasMany(Workflow, { foreignKey: "group_id", as: "workflows" });
+
+  // ======================================================
+  // WORKFLOW (GẮN PROJECT, KHÔNG GẮN GROUP)
+  // ======================================================
+  Workflow.belongsTo(Project, { foreignKey: "project_id", as: "project" });
+  Project.hasMany(Workflow, { foreignKey: "project_id", as: "workflows" });
 
   WorkflowStep.belongsTo(Workflow, { foreignKey: "workflow_id", as: "workflow" });
   Workflow.hasMany(WorkflowStep, { foreignKey: "workflow_id", as: "workflowSteps" });
 
-  // -----------------------------
+
+  // ======================================================
   // PROJECT – RELATIONS
-  // -----------------------------
+  // ======================================================
   Project.belongsTo(User, { foreignKey: "owner_id", as: "owner" });
   User.hasMany(Project, { foreignKey: "owner_id", as: "ownedProjects" });
 
@@ -61,9 +63,7 @@ export default function initAssociations() {
   Project.belongsTo(User, { foreignKey: "assigned_user_id", as: "assignedUser" });
   User.hasMany(Project, { foreignKey: "assigned_user_id", as: "userAssignedProjects" });
 
-  Project.belongsTo(Workflow, { foreignKey: "workflow_id", as: "workflow" });
-  Workflow.hasMany(Project, { foreignKey: "workflow_id", as: "workflowProjects" });
-
+  // Many-to-many project-user
   Project.hasMany(ProjectMember, { foreignKey: "project_id", as: "projectMembers" });
   ProjectMember.belongsTo(Project, { foreignKey: "project_id", as: "project" });
 
@@ -84,15 +84,17 @@ export default function initAssociations() {
     as: "projectsJoined"
   });
 
-  // -----------------------------
+
+  // ======================================================
   // MILESTONES
-  // -----------------------------
+  // ======================================================
   Milestone.belongsTo(Project, { foreignKey: "project_id", as: "project" });
   Project.hasMany(Milestone, { foreignKey: "project_id", as: "milestones" });
 
-  // -----------------------------
-  // TASKS
-  // -----------------------------
+
+  // ======================================================
+  // TASKS (Không còn group_id)
+  // ======================================================
   Task.belongsTo(User, { foreignKey: "created_by", as: "creator" });
   User.hasMany(Task, { foreignKey: "created_by", as: "createdTasks" });
 
@@ -102,65 +104,70 @@ export default function initAssociations() {
   Task.belongsTo(Project, { foreignKey: "project_id", as: "project" });
   Project.hasMany(Task, { foreignKey: "project_id", as: "projectTasks" });
 
-  Task.belongsTo(Group, { foreignKey: "group_id", as: "group" });
-  Group.hasMany(Task, { foreignKey: "group_id", as: "groupTasks" });
+  Task.belongsTo(Milestone, { foreignKey: "milestone_id", as: "milestone" });
+  Milestone.hasMany(Task, { foreignKey: "milestone_id", as: "milestoneTasks" });
 
   Task.belongsTo(WorkflowStep, { foreignKey: "step_id", as: "step" });
   WorkflowStep.hasMany(Task, { foreignKey: "step_id", as: "workflowTasks" });
 
-  // -----------------------------
+
+  // ======================================================
   // SUBTASKS
-  // -----------------------------
+  // ======================================================
   Task.hasMany(Subtask, { foreignKey: "task_id", as: "subtasks" });
   Subtask.belongsTo(Task, { foreignKey: "task_id", as: "task" });
 
-  // -----------------------------
+
+  // ======================================================
   // TASK HISTORY
-  // -----------------------------
-  Task.hasMany(TaskHistory, { foreignKey: "task_id", as: "taskHistory" });
+  // ======================================================
+  Task.hasMany(TaskHistory, { foreignKey: "task_id", as: "history" });
   TaskHistory.belongsTo(Task, { foreignKey: "task_id", as: "task" });
 
-  User.hasMany(TaskHistory, { foreignKey: "changed_by_user_id", as: "taskHistoryChanges" });
+  User.hasMany(TaskHistory, { foreignKey: "changed_by_user_id", as: "taskChanges" });
   TaskHistory.belongsTo(User, { foreignKey: "changed_by_user_id", as: "changedBy" });
 
-  // -----------------------------
+
+  // ======================================================
   // COMMENTS
-  // -----------------------------
-Task.hasMany(Comment, { foreignKey: "task_id", as: "comments" });
-Comment.belongsTo(Task, { foreignKey: "task_id", as: "task" });
+  // ======================================================
+  Task.hasMany(Comment, { foreignKey: "task_id", as: "comments" });
+  Comment.belongsTo(Task, { foreignKey: "task_id", as: "task" });
 
-User.hasMany(Comment, { foreignKey: "user_id", as: "comments"});
-Comment.belongsTo(User, { foreignKey: "user_id", as: "author" }); 
+  User.hasMany(Comment, { foreignKey: "user_id", as: "comments" });
+  Comment.belongsTo(User, { foreignKey: "user_id", as: "author" });
 
-Comment.hasMany(CommentHistory, { foreignKey: "comment_id", as: "history" });
-CommentHistory.belongsTo(Comment, { foreignKey: "comment_id", as: "comment" });
+  Comment.hasMany(CommentHistory, { foreignKey: "comment_id", as: "history" });
+  CommentHistory.belongsTo(Comment, { foreignKey: "comment_id", as: "comment" });
 
-User.hasMany(CommentHistory, { foreignKey: "edited_by_user_id", as: "editHistory" });
-CommentHistory.belongsTo(User, { foreignKey: "edited_by_user_id", as: "editor" });
+  User.hasMany(CommentHistory, { foreignKey: "edited_by_user_id", as: "commentEdits" });
+  CommentHistory.belongsTo(User, { foreignKey: "edited_by_user_id", as: "editor" });
 
-  // -----------------------------
-  // PERFORMANCE (UPDATED)
-  // -----------------------------
 
-  // đánh giá theo group
+  // ======================================================
+  // PERFORMANCE RECORDS
+  // ======================================================
+
+  // đánh giá theo group (nullable)
   PerformanceRecord.belongsTo(Group, { foreignKey: "group_id", as: "group" });
   Group.hasMany(PerformanceRecord, { foreignKey: "group_id", as: "performanceRecords" });
 
-  // đánh giá theo project
+  // đánh giá theo project (nullable)
   PerformanceRecord.belongsTo(Project, { foreignKey: "project_id", as: "project" });
   Project.hasMany(PerformanceRecord, { foreignKey: "project_id", as: "performanceRecords" });
 
   // người được đánh giá
   PerformanceRecord.belongsTo(User, { foreignKey: "user_id", as: "user" });
-  User.hasMany(PerformanceRecord, { foreignKey: "user_id", as: "givenPerformance" });
+  User.hasMany(PerformanceRecord, { foreignKey: "user_id", as: "performanceReceived" });
 
   // người đánh giá
   PerformanceRecord.belongsTo(User, { foreignKey: "created_by", as: "createdBy" });
   User.hasMany(PerformanceRecord, { foreignKey: "created_by", as: "performanceGiven" });
 
-  // -----------------------------
+
+  // ======================================================
   // REFRESH TOKEN
-  // -----------------------------
+  // ======================================================
   RefreshToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
   User.hasMany(RefreshToken, { foreignKey: "user_id", as: "refreshTokens" });
 
