@@ -161,14 +161,14 @@ export async function getUserByIdService(user_id) {
 
 export async function updateUserProfileService(user_id, updates) {
   const ALLOWED_FIELDS = [
-  "email",
-  "phone_number",
-  "username",
-  "address",
-  "birthday",
-  "github_access_token",
-  "avatar_base64"
+    "email",
+    "phone_number",
+    "username",
+    "address",
+    "birthday",
+    "github_access_token"
   ];
+
   const user = await User.findByPk(user_id);
   if (!user) throw { status: 404, message: "Người dùng không tồn tại" };
   if (updates.email) {
@@ -185,21 +185,27 @@ export async function updateUserProfileService(user_id, updates) {
     if (phoneExist) throw { status: 400, message: "Số điện thoại đã tồn tại" };
     user.phone_number = updates.phone_number;
   }
-
   for (const key of ALLOWED_FIELDS) {
     if (updates[key] !== undefined && key !== "email" && key !== "phone_number") {
       user[key] = updates[key];
     }
   }
-
   if (updates.avatar_base64) {
     try {
-      if (user.avatar_public_id) {
-        await cloudinary.uploader.destroy(user.avatar_public_id);
+      let base64 = updates.avatar_base64;
+      if (!base64.startsWith("data:image")) {
+        base64 = `data:image/png;base64,${base64}`;
       }
-
-      const upload = await cloudinary.uploader.upload(updates.avatar_base64, {
+      if (user.avatar_public_id) {
+        try {
+          await cloudinary.uploader.destroy(user.avatar_public_id);
+        } catch (err) {
+          console.log("Không thể xóa avatar cũ:", err);
+        }
+      }
+      const upload = await cloudinary.uploader.upload(base64, {
         folder: "todoapp/avatar",
+        transformation: [{ width: 512, height: 512, crop: "limit" }]
       });
 
       user.avatar_url = upload.secure_url;
@@ -210,7 +216,6 @@ export async function updateUserProfileService(user_id, updates) {
       throw { status: 500, message: "Không thể upload avatar" };
     }
   }
-
   if (updates.delete_avatar === true) {
     if (user.avatar_public_id) {
       try {
@@ -222,16 +227,14 @@ export async function updateUserProfileService(user_id, updates) {
     user.avatar_url = null;
     user.avatar_public_id = null;
   }
-
   await user.save();
-
   const safeUser = user.toJSON();
   delete safeUser.password;
   delete safeUser.reset_token;
   delete safeUser.reset_expires;
-
   return safeUser;
 }
+
 
 export async function getUserIdByEmailService(email) {
   const user = await User.findOne({ where: { email } });
