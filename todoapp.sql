@@ -32,11 +32,39 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `workspaces` (
+  `workspace_id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(150) NOT NULL,
+  `workspace_token` VARCHAR(255) NOT NULL UNIQUE,
+  `description` TEXT,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`workspace_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE IF NOT EXISTS `workspace_members` (
+  `workspace_id` INT NOT NULL,
+  `user_id` INT NOT NULL,
+  `workspace_role` ENUM('Owner', 'Admin', 'Member', 'Viewer') NOT NULL DEFAULT 'Member',
+  `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`workspace_id`, `user_id`),
+  FOREIGN KEY (`workspace_id`)
+    REFERENCES `workspaces` (`workspace_id`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`user_id`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`workspace_role_id`)
+    REFERENCES `workspace_roles` (`workspace_role_id`)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ==============================
 -- Groups
 -- ==============================
 CREATE TABLE IF NOT EXISTS `groups` (
   `group_id` INT NOT NULL AUTO_INCREMENT,
+  `workspace_id` INT NOT NULL,
   `name` VARCHAR(100) NOT NULL,
   `description` TEXT,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,

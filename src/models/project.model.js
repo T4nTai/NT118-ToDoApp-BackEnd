@@ -7,17 +7,10 @@ export const Project = sequelize.define('Project', {
     autoIncrement: true,
     primaryKey: true
   },
-  assigned_group_id: {
+  workspace_id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'groups',
-      key: 'group_id'
-    },
-    onUpdate: 'CASCADE',
-    onDelete: 'SET NULL'
+    allowNull: false
   },
-
   assigned_user_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
