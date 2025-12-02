@@ -23,6 +23,7 @@ export async function signUp(req, res, next) {
         username: newUser.username,
         address: newUser.address,
         birthday: newUser.birthday,
+        gender: newUser.gender,
         role: newUser.role
       }
     });
@@ -48,7 +49,8 @@ export async function signIn(req, res, next) {
         address: user.address,
         birthday: user.birthday,
         role: user.role,
-        avatar_url: user.avatar_url
+        avatar_url: user.avatar_url,
+        gender: user.gender
       }
     });
 
@@ -61,7 +63,7 @@ export async function signIn(req, res, next) {
 
 
 export async function githubSignIn(req, res, next) {
-  const platform = req.query.platform || "web"; // web | mobile
+  const platform = req.query.platform || "web"; 
   const url = githubSignInService(platform);
   res.redirect(url);
 }
@@ -128,6 +130,7 @@ export async function updateUserProfile(req, res, next) {
         username: updatedUser.username,
         address: updatedUser.address,
         birthday: updatedUser.birthday,
+        gender: updatedUser.gender,
         avatar_url: updatedUser.avatar_url
       }
     });

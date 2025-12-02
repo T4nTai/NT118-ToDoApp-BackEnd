@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `phone_number` VARCHAR(20) UNIQUE,
   `address` VARCHAR(100),
   `birthday` DATE,
+  `gender` ENUM('Male', 'Female', 'Other') DEFAULT NULL,
   `avatar_public_id` VARCHAR(255),
   `github_access_token` VARCHAR(255),
   `role` ENUM('Admin', 'User') NOT NULL DEFAULT 'User',
