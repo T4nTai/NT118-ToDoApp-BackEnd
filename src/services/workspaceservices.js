@@ -1,15 +1,48 @@
 import { Workspace } from '../models/workspace.model.js';
 import { User } from '../models/auth.model.js';
+import crypto from 'crypto';
 import { WorkspaceMember } from '../models/workspace_member.model.js';
 
 
+export function generateWorkspaceToken() {
+    return crypto.randomBytes(16).toString("hex"); 
+}
 export async function createWorkSpaceService({ name, description, owner_id }) {
+    const workspace_token = generateWorkspaceToken();
     if (!name || !owner_id) {
         throw { status: 400, message: "Cần nhập đầy đủ Tên workspace và ID chủ sở hữu" };
     }
-    const workspace = await Workspace.create({ name, description, owner_id });
+    const workspace = await Workspace.create({ name, workspace_token ,description, owner_id });
     await WorkspaceMember.create({ workspace_id: workspace.workspace_id, user_id: owner_id, role: "Owner" });
     return workspace;
+}
+export async function joinWorkspaceByTokenService(user_id, token) {
+
+    if (!token) {
+        throw { status: 400, message: "Vui lòng nhập Workspace Token" };
+    }
+    const workspace = await Workspace.findOne({ where: { workspace_token: token } });
+
+    if (!workspace) {
+        throw { status: 404, message: "Token không hợp lệ hoặc workspace không tồn tại" };
+    }
+    const existed = await WorkspaceMember.findOne({
+        where: { workspace_id: workspace.workspace_id, user_id }
+    });
+
+    if (existed) {
+        throw { status: 400, message: "Bạn đã là thành viên của workspace này" };
+    }
+    const result = await WorkspaceMember.create({
+        workspace_id: workspace.workspace_id,
+        user_id,
+        role: "Member"
+    });
+    return {
+        message: "Tham gia workspace thành công",
+        workspace,
+        member: result
+    };
 }
 
 export async function getWorkspaceByOwnerService(owner_id) {
