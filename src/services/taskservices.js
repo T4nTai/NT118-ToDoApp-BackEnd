@@ -158,7 +158,8 @@ export async function updateTaskService(task_id, updateData) {
         "step_id",
         "start_date",
         "due_date",
-        "task_progress"
+        "task_progress",
+        "completed_at"
     ];
     const validUpdates = {};
     for (const key of Object.keys(updateData)) {
