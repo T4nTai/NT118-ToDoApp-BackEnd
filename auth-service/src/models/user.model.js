@@ -23,14 +23,10 @@ export const User = sequelize.define(
     address: DataTypes.STRING(100),
     birthday: DataTypes.DATE,
     gender: DataTypes.ENUM("Male", "Female", "Other"),
-    avatar_public_id: DataTypes.STRING,
-    github_access_token: DataTypes.STRING,
     role: {
       type: DataTypes.ENUM("Admin", "User"),
       defaultValue: "User"
     },
-    github_id: DataTypes.STRING,
-    avatar_url: DataTypes.STRING,
     reset_token: DataTypes.STRING(10),
     reset_expires: DataTypes.DATE
   },
