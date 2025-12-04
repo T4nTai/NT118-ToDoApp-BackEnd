@@ -166,13 +166,7 @@ export async function deleteProjectService(project_id, owner_id) {
     if (!project) {
         throw { status: 404, message: "Dự án không tồn tại" };
     }
-
-    if (project.owner_id !== owner_id) {
-        throw { status: 403, message: "Bạn không có quyền xoá dự án này" };
-    }
-
     await project.destroy();
-
     return { message: "Xoá dự án thành công" };
 }
 
