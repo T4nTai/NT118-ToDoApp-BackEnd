@@ -3,7 +3,7 @@ import { Subtask } from '../models/subtask.model.js';
 import { updateTaskStatusIfSubtasksCompletedService } from '../services/taskservices.js';
 
 
-export async function createSubtaskService(task_id, { title, description, priority, status }) {
+export async function createSubtaskService(task_id, { title, description, priority, status, due_date }) {
     if (!task_id) {
         throw { status: 400, message: "Thiếu task_id để tạo subtask" };
     }
@@ -19,7 +19,8 @@ export async function createSubtaskService(task_id, { title, description, priori
         title,
         description: description || null,
         priority: priority || "Medium",
-        status: status || "To Do"
+        status: status || "To Do",
+        due_date: due_date || null
     });
 
     return subtask;
