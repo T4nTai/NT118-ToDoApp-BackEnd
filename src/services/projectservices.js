@@ -6,24 +6,52 @@ import { GroupMember } from '../models/group_member.model.js';
 import { sendNotificationEmail } from '../ultis/sendmail.js';
 import { WorkflowStep } from '../models/workflow_step.model.js';
 import { Workflow } from '../models/workflow.model.js';
+import { Workspace } from '../models/workspace.model.js'; // thêm để check workspace tồn tại
 
 
-export async function createProjectService({ name, description, status, priority, start_date, due_date, owner_id }) {
+// ============================================================
+// TẠO PROJECT
+// ============================================================
+export async function createProjectService({
+    workspace_id,
+    name,
+    description,
+    status,
+    priority,
+    start_date,
+    due_date,
+    owner_id
+}) {
 
-    if (!name || !owner_id) {
-        throw { status: 400, message: "Thiếu name hoặc owner_id" };
+    if (!workspace_id || !name || !owner_id) {
+        throw { status: 400, message: "Thiếu workspace_id, name hoặc owner_id" };
     }
-
+    const workspace = await Workspace.findByPk(workspace_id);
+    if (!workspace) {
+        throw { status: 404, message: "Workspace không tồn tại" };
+    }
     if (start_date && due_date && new Date(start_date) > new Date(due_date)) {
         throw { status: 400, message: "Ngày bắt đầu không thể sau ngày kết thúc" };
     }
-    const project = await Project.create({ name, description, status, priority, start_date, due_date, owner_id });
-    const workflow = await Workflow.create({ project_id: project.project_id, name: "${name} Workflow" });
+    const project = await Project.create({
+        workspace_id,
+        name,
+        description,
+        status,     
+        priority,   
+        start_date,
+        due_date,
+        owner_id
+    });
+    const workflow = await Workflow.create({
+        project_id: project.project_id,
+        name: `${name} Workflow`
+    });
     const defaultSteps = [
-        { name: "To Do", step_order: 1 },
+        { name: "To Do",       step_order: 1 },
         { name: "In Progress", step_order: 2 },
-        { name: "Review", step_order: 3 },
-        { name: "Done", step_order: 4 }
+        { name: "Review",      step_order: 3 },
+        { name: "Done",        step_order: 4 }
     ];
     for (const step of defaultSteps) {
         await WorkflowStep.create({
@@ -32,45 +60,51 @@ export async function createProjectService({ name, description, status, priority
             step_order: step.step_order
         });
     }
-    project.workflow_id = workflow.workflow_id;
-    await project.save();
-
     await ProjectMember.create({
         project_id: project.project_id,
         user_id: owner_id,
         role: "Owner"
     });
+
     return project;
 }
 
-
-
 export async function getProjectsByOwnerService(owner_id) {
     const user = await User.findByPk(owner_id, {
-        include: [{ model: Project, as: 'ownedProjects',
-            include: [{ model: User, as: 'members', attributes: ['user_id', 'username', 'email'],
+        include: [{
+            model: Project,
+            as: 'ownedProjects',
+            include: [{
+                model: User,
+                as: 'members',
+                attributes: ['user_id', 'username', 'email'],
                 through: { attributes: ['role'] }
-             }] }]
+            }]
+        }]
     });
+
     return user ? user.ownedProjects : [];
 }
-
-
 export async function updateProjectService(project_id, owner_id, updates) {
     const project = await Project.findByPk(project_id);
 
     if (!project) {
         throw { status: 404, message: "Dự án không tồn tại" };
     }
-
     if (project.owner_id !== owner_id) {
         throw { status: 403, message: "Bạn không có quyền sửa dự án này" };
     }
     const allowedFields = [
-        "name", "description", "status", "priority",
-        "start_date", "due_date", "workflow_id",
-        "assigned_user_id", "assigned_group_id"
+        "name",
+        "description",
+        "status",
+        "priority",
+        "start_date",
+        "due_date",
+        "assigned_user_id",
+        "assigned_group_id"
     ];
+
     const dataToUpdate = {};
     for (const key of allowedFields) {
         if (updates[key] !== undefined) {
@@ -82,6 +116,7 @@ export async function updateProjectService(project_id, owner_id, updates) {
             throw { status: 400, message: "start_date không thể sau due_date" };
         }
     }
+
     await project.update(dataToUpdate);
     return project;
 }
@@ -97,6 +132,7 @@ export async function assignProjectToGroupService(project_id, group_id, inviter_
     project.assigned_group_id = group_id;
     project.assigned_user_id = null;
     await project.save();
+
     const groupMembers = await GroupMember.findAll({
         where: { group_id },
         include: [{ model: User, as: "member" }]
@@ -104,9 +140,11 @@ export async function assignProjectToGroupService(project_id, group_id, inviter_
 
     for (const gm of groupMembers) {
         const user = gm.member;
+
         const exists = await ProjectMember.findOne({
             where: { project_id, user_id: user.user_id }
         });
+
         if (!exists) {
             await ProjectMember.create({
                 project_id,
@@ -116,17 +154,15 @@ export async function assignProjectToGroupService(project_id, group_id, inviter_
         }
         await sendNotificationEmail({
             to: user.email,
-            inviterName: inviter.username,
+            inviterName: inviter?.username,
             targetType: "Dự án",
-            targetName: project.project_name,
+            targetName: project.name,
             role: "Member"
         });
     }
 
     return project;
 }
-
-
 export async function assignProjectToUserService(project_id, user_id, inviter_id) {
     const project = await Project.findByPk(project_id);
     if (!project) throw { status: 404, message: "Dự án không tồn tại" };
@@ -135,13 +171,14 @@ export async function assignProjectToUserService(project_id, user_id, inviter_id
     if (!user) throw { status: 404, message: "Người dùng không tồn tại" };
 
     const inviter = await User.findByPk(inviter_id);
-
     project.assigned_user_id = user_id;
-    project.assigned_group_id = null; 
+    project.assigned_group_id = null;
     await project.save();
+
     const exists = await ProjectMember.findOne({
         where: { project_id, user_id }
     });
+
     if (!exists) {
         await ProjectMember.create({
             project_id,
@@ -149,26 +186,26 @@ export async function assignProjectToUserService(project_id, user_id, inviter_id
             role: "Member"
         });
     }
+
     await sendNotificationEmail({
         to: user.email,
-        inviterName: inviter.username,
+        inviterName: inviter?.username,
         targetType: "Dự án",
-        targetName: project.project_name,
+        targetName: project.name, 
         role: "Manager"
     });
 
     return project;
 }
-
 export async function deleteProjectService(project_id, owner_id) {
     const project = await Project.findByPk(project_id);
 
     if (!project) {
         throw { status: 404, message: "Dự án không tồn tại" };
     }
+    if (project.owner_id !== owner_id) {
+        throw { status: 403, message: "Bạn không có quyền xoá dự án này" };
+    }
     await project.destroy();
     return { message: "Xoá dự án thành công" };
 }
-
-
-
