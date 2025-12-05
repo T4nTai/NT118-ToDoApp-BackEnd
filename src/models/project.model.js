@@ -75,9 +75,16 @@ export const Project = sequelize.define('Project', {
     type: DataTypes.DATEONLY,
     allowNull: true
   },
-
   due_date: {
     type: DataTypes.DATEONLY,
+    allowNull: true
+  },
+  attachment_url: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  attachment_public_id: {
+    type: DataTypes.STRING,
     allowNull: true
   }
 

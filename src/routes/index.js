@@ -6,6 +6,7 @@ import ProjectRouter from './project.routes.js';
 import PerformanceRouter from './performance.routes.js';
 import SubTaskRouter from './subtask.route.js';
 import CommentRouter from './comment.routes.js';
+import WorkspaceRouter from './workspace.routes.js';
 
 const router = Router();
 
@@ -28,6 +29,8 @@ router.use("/subtask", SubTaskRouter);
 
 
 router.use("/comments", CommentRouter);
+
+router.use("/workspaces", WorkspaceRouter);
 
 
 export default router;

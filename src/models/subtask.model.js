@@ -36,7 +36,7 @@ export const Subtask = sequelize.define('Subtask', {
     defaultValue: 'To Do'
   },
   due_date: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY,
     allowNull: true
   },
   created_at: {

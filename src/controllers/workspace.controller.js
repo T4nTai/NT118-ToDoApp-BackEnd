@@ -1,4 +1,4 @@
-import { createWorkSpaceService, addWorkspaceMemberService, getWorkspaceByOwnerService, deleteWorkspaceService, getListMemberService, removeWorkspaceMemberService, updateWorkspaceMemberRoleService, leaveWorkspaceService, joinWorkspaceByTokenService } from "../services/workspaceservices.js";
+import { createWorkSpaceService, addWorkspaceMemberService, getMyWorkspacesService, deleteWorkspaceService, getListMemberService, removeWorkspaceMemberService, updateWorkspaceMemberRoleService, leaveWorkspaceService, joinWorkspaceByTokenService } from "../services/workspaceservices.js";
 
 export async function createWorkspace(req, res, next) {
     try {
@@ -28,8 +28,8 @@ export async function joinWorkspace(req, res, next) {
 
 export async function getMyWorkspace(req, res, next) {
     try {
-        const owner_id = req.user.id;
-        const workspace = await getWorkspaceByOwnerService(owner_id);
+        const user_id = req.user.id;
+        const workspace = await getMyWorkspacesService(user_id);
         if (!workspace) {
             return res.status(404).json({ message: "Bạn chưa tạo workspace nào" });
         }

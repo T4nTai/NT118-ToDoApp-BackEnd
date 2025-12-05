@@ -45,9 +45,15 @@ export async function joinWorkspaceByTokenService(user_id, token) {
     };
 }
 
-export async function getWorkspaceByOwnerService(owner_id) {
-    const workspace = await Workspace.findOne({ where: { owner_id } });
-    return workspace;
+export async function getMyWorkspacesService(user_id) {
+    return Workspace.findAll({
+        include: [{
+            model: WorkspaceMember,
+            as: "members",
+            where: { user_id },
+            attributes: ["workspace_role", "joined_at"]
+        }]
+    });
 }
 
 
