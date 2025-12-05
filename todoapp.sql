@@ -115,6 +115,8 @@ CREATE TABLE IF NOT EXISTS `projects` (
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `start_date` DATE,
   `due_date` DATE,
+  `attachment_url` VARCHAR(255),
+  `attachment_public_id` VARCHAR(255),
   PRIMARY KEY (`project_id`),
 
   INDEX `idx_proj_owner` (`owner_id`),

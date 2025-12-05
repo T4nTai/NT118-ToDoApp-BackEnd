@@ -7,21 +7,23 @@ import { sendNotificationEmail } from '../ultis/sendmail.js';
 import { WorkflowStep } from '../models/workflow_step.model.js';
 import { Workflow } from '../models/workflow.model.js';
 import { Workspace } from '../models/workspace.model.js'; // thêm để check workspace tồn tại
+import cloudinary from "../config/cloudinary.js";
 
 
 // ============================================================
 // TẠO PROJECT
 // ============================================================
-export async function createProjectService({
-    workspace_id,
-    name,
-    description,
-    status,
-    priority,
-    start_date,
-    due_date,
-    owner_id
-}) {
+export async function createProjectService(data, file ) {
+    const { 
+        workspace_id,
+        name,
+        description,
+        status,
+        priority,
+        start_date,
+        due_date,
+        owner_id
+    } = data;
 
     if (!workspace_id || !name || !owner_id) {
         throw { status: 400, message: "Thiếu workspace_id, name hoặc owner_id" };
@@ -43,6 +45,22 @@ export async function createProjectService({
         due_date,
         owner_id
     });
+    if (file) {
+        try {
+            const uploaded = await cloudinary.uploader.upload(file.path, {
+            folder: "todo/projects",
+            resource_type: "raw"
+            });
+
+            await project.update({
+                attachment_url: uploaded.secure_url,
+                attachment_public_id: uploaded.public_id
+            });
+        } catch (err) {
+            console.error("Upload file thất bại:", err);
+            throw { status: 500, message: "Không thể upload file" };
+        }
+    }
     const workflow = await Workflow.create({
         project_id: project.project_id,
         name: `${name} Workflow`

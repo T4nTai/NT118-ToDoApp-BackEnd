@@ -11,11 +11,9 @@ export async function createProject(req, res, next) {
     try {
         const { workspace_id, name, description, status, priority, start_date, due_date } = req.body;
         const owner_id = req.user.id;
-
         if (!workspace_id) {
             return res.status(400).json({ message: "Thiếu workspace_id" });
         }
-
         const project = await createProjectService({
             workspace_id,
             name,
@@ -25,7 +23,7 @@ export async function createProject(req, res, next) {
             start_date,
             due_date,
             owner_id
-        });
+        }, req.file );
 
         return res.status(201).json({
             message: "Tạo dự án thành công",

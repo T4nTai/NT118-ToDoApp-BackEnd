@@ -1,10 +1,12 @@
 import { Router } from "express";
 import { authenticateJWT } from "../middleware/auth.middleware.js";
+import multer from "multer";
 import { createProject, getProjectsByOwner, assignProjectToGroup, assignProjectToUser, deleteProject, updateProject } from "../controllers/project.controller.js";
 
 const ProjectRouter = Router();
+const upload = multer({ dest: "uploads/" });
 
-ProjectRouter.post("/create", authenticateJWT, createProject);
+ProjectRouter.post("/create", authenticateJWT, upload.single("file") ,createProject);
 
 ProjectRouter.get("/owner", authenticateJWT, getProjectsByOwner);
 

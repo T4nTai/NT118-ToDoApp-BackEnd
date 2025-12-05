@@ -110,7 +110,7 @@ export const Task = sequelize.define('Task', {
     allowNull: true
   },
   completed_at: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY,
     allowNull: true
   }
 
