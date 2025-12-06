@@ -2,6 +2,7 @@ import { Workspace } from '../models/workspace.model.js';
 import { User } from '../models/auth.model.js';
 import crypto from 'crypto';
 import { WorkspaceMember } from '../models/workspace_member.model.js';
+import { getUserIdByEmail } from './authservices.js';
 
 
 export function generateWorkspaceToken() {
@@ -12,7 +13,7 @@ export async function createWorkSpaceService({ name, description, owner_id }) {
     if (!name || !owner_id) {
         throw { status: 400, message: "Cần nhập đầy đủ Tên workspace và ID chủ sở hữu" };
     }
-    const workspace = await Workspace.create({ name, workspace_token ,description, owner_id });
+    const workspace = await Workspace.create({ name, workspace_token ,description });
     await WorkspaceMember.create({ workspace_id: workspace.workspace_id, user_id: owner_id, role: "Owner" });
     return workspace;
 }
@@ -36,7 +37,7 @@ export async function joinWorkspaceByTokenService(user_id, token) {
     const result = await WorkspaceMember.create({
         workspace_id: workspace.workspace_id,
         user_id,
-        role: "Member"
+        workspace_role: "Member"
     });
     return {
         message: "Tham gia workspace thành công",
@@ -57,24 +58,22 @@ export async function getMyWorkspacesService(user_id) {
 }
 
 
-export async function addWorkspaceMemberService( workspace_id, user_id, role = "Member", requesterRole ) {
+export async function addWorkspaceMemberService( workspace_id, email, workspace_role = "Member", requesterRole ) {
+    const user_id = await getUserIdByEmail(email);
     const VALID_ROLES = ["Admin", "Member", "Viewer"];
-    if (role === "Owner") {
+    if (workspace_role === "Owner") {
         throw { status: 403, message: "Không thể gán vai trò Owner cho người khác" };
     }
-
-    if (!VALID_ROLES.includes(role)) {
+    if (!VALID_ROLES.includes(workspace_role)) {
         throw { status: 400, message: "Vai trò không hợp lệ" };
     }
-    if (role === "Admin" && requesterRole !== "Owner") {
+    if (workspace_role === "Admin" && requesterRole !== "Owner") {
         throw { status: 403, message: "Chỉ Owner mới được thêm Admin" };
     }
-
     const workspace = await Workspace.findByPk(workspace_id);
     if (!workspace) {
         throw { status: 404, message: "Workspace không tồn tại" };
     }
-
     const user = await User.findByPk(user_id);
     if (!user) {
         throw { status: 404, message: "Người dùng không tồn tại" };
@@ -86,9 +85,8 @@ export async function addWorkspaceMemberService( workspace_id, user_id, role = "
     const workspaceMember = await WorkspaceMember.create({
         workspace_id,
         user_id,
-        role
+        workspace_role
     });
-
     return workspaceMember;
 }
 
@@ -108,7 +106,7 @@ export async function removeWorkspaceMemberService(workspace_id, user_id) {
 
     if (!member) throw { status: 404, message: "Thành viên không tồn tại trong workspace" };
 
-    if (member.role === "Owner") {
+    if (member.workspace_role === "Owner") {
         throw { status: 403, message: "Không được xóa Owner khỏi workspace" };
     }
 

@@ -43,11 +43,11 @@ export async function getMyWorkspace(req, res, next) {
 export async function addWorkspaceMember(req, res, next) {
     try {
         const { workspace_id } = req.params;
-        const { user_id, role } = req.body;
+        const { email, role } = req.body;
         const requesterRole = req.workspaceRole;
         const member = await addWorkspaceMemberService(
             workspace_id,
-            user_id,
+            email,
             role,
             requesterRole
         );
