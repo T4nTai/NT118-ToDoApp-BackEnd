@@ -5,7 +5,7 @@ import {
     updateMilestoneService,
     completeMilestoneService,
     deleteMilestoneService
-} from "../services/milestone.service.js";
+} from "../services/milestoneservices.js";
 
 
 export class MilestoneController {

@@ -48,24 +48,11 @@ export const Project = sequelize.define('Project', {
     onUpdate: 'CASCADE',
     onDelete: 'RESTRICT'
   },
-
-  workflow_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'workflows',
-      key: 'workflow_id'
-    },
-    onUpdate: 'CASCADE',
-    onDelete: 'SET NULL'
-  },
-
   priority: {
     type: DataTypes.ENUM('Low', 'Medium', 'High', 'Critical'),
     allowNull: false,
     defaultValue: 'Medium'
   },
-
   created_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

@@ -3,10 +3,13 @@ import { RefreshToken } from "../models/token.model.js";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/env.js";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { generateResetPasswordEmail } from "../ultis/reset_password_email_template.js";
 import { transporter } from "../config/mail.js";
 import { Op } from "sequelize";
 import cloudinary from "../config/cloudinary.js";
+import { Workspace } from "../models/workspace.model.js";
+import { WorkspaceMember } from "../models/workspace_member.model.js";
 
 function generateAccessToken(user) {
   return jwt.sign(
@@ -146,6 +149,17 @@ export async function signInService({ email, phone_number, password }) {
     refreshToken
   };
 }
+export async function getUserIdByEmail(email) {
+    if (!email) {
+        throw { status: 400, message: "Email không được để trống" };
+    }
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+        throw { status: 404, message: "Không tìm thấy user với email này" };
+    }
+
+    return user.user_id;
+}
 
 export async function getUserByIdService(user_id) {
   const user = await User.findByPk(user_id, {
@@ -234,6 +248,66 @@ export async function updateUserProfileService(user_id, updates) {
   delete safeUser.reset_token;
   delete safeUser.reset_expires;
   return safeUser;
+}
+
+
+export async function createAdminAccountService(data) {
+  const { email, username, phone_number, address, birthday, password } = data;
+
+  if (!email || !password) {
+    throw { status: 400, message: "Email và mật khẩu là bắt buộc" };
+  }
+
+  const existedEmail = await User.findOne({ where: { email } });
+  if (existedEmail) throw { status: 400, message: "Email đã tồn tại" };
+
+  if (phone_number) {
+    const existedPhone = await User.findOne({ where: { phone_number } });
+    if (existedPhone) throw { status: 400, message: "Số điện thoại đã tồn tại" };
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Tạo Admin user
+  const admin = await User.create({
+    email,
+    username,
+    phone_number,
+    address,
+    birthday,
+    password: hashedPassword,
+    role: "Admin"
+  });
+
+  console.log("Admin created:", admin.user_id);
+
+  const workspace_token = crypto.randomBytes(3).toString("hex"); // 6 ký tự
+
+  // Tạo workspace
+  const workspace = await Workspace.create({
+    name: `${username}'s Workspace`,
+    description: `Workspace mặc định của Admin ${username}`,
+    workspace_token
+  });
+
+  console.log("Workspace ID =", workspace.workspace_id);
+
+  // Tạo WorkspaceMember
+  await WorkspaceMember.create({
+    workspace_id: workspace.workspace_id,
+    user_id: admin.user_id,
+    workspace_role: "Owner"
+  });
+
+  // Trả về dữ liệu sạch
+  const safeUser = admin.toJSON();
+  delete safeUser.password;
+
+  return {
+    message: "Tạo tài khoản Admin thành công",
+    admin: safeUser,
+    workspace
+  };
 }
 
 

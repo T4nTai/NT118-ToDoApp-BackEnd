@@ -7,6 +7,7 @@ import { signUpService,
          updateUserProfileService, 
          checkResetTokenService,
          refreshTokenService,
+         createAdminAccountService
         } from "../services/authservices.js";
 import { githubSignInService,githubCallbackService } from "../services/githubservices.js";
 import { FRONTEND_URL, MOBILE_SCHEME } from "../config/env.js";
@@ -66,6 +67,24 @@ export async function githubSignIn(req, res, next) {
   const platform = req.query.platform || "web"; 
   const url = githubSignInService(platform);
   res.redirect(url);
+}
+
+export async function createAdminAccount(req, res, next) {
+  try {
+    const adminUser = await createAdminAccountService(req.body);
+    return res.status(201).json({
+      message: "Tài khoản Admin đã được tạo thành công",
+      user: {
+        user_id: adminUser.user_id,
+        email: adminUser.email,
+        username: adminUser.username,
+        role: adminUser.role
+      }
+    });
+  } catch (err) {
+    if (err && err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
 }
 
 export async function githubCallback(req, res, next) {

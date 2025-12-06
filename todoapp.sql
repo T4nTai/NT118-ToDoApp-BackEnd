@@ -277,7 +277,6 @@ CREATE TABLE IF NOT EXISTS `subtasks` (
   `due_date` DATE,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`subtask_id`),
-
   FOREIGN KEY (`task_id`)
     REFERENCES `tasks` (`task_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
