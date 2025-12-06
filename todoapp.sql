@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS `projects` (
   `workspace_id` INT NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `description` TEXT,
-  `status` ENUM('Active', 'On Hold', 'Completed', 'Archived') NOT NULL DEFAULT 'Active',
+  `status` ENUM('To Do', 'In Progress', 'Completed') NOT NULL DEFAULT 'To Do',
   `priority` ENUM('Low', 'Medium', 'High', 'Critical') NOT NULL DEFAULT 'Medium',
   `owner_id` INT NOT NULL,
   `assigned_group_id` INT NULL,

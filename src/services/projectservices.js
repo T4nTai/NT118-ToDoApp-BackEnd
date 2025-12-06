@@ -8,6 +8,7 @@ import { WorkflowStep } from '../models/workflow_step.model.js';
 import { Workflow } from '../models/workflow.model.js';
 import { Workspace } from '../models/workspace.model.js'; // thêm để check workspace tồn tại
 import cloudinary from "../config/cloudinary.js";
+import { getUserIdByEmail } from './authservices.js';
 
 
 // ============================================================
@@ -214,6 +215,58 @@ export async function assignProjectToUserService(project_id, user_id, inviter_id
     });
 
     return project;
+}
+
+export async function addMemberToProjectService({ project_id, email, role = "Member", inviter_id }) {
+
+    // Validate
+    if (!project_id || !email) {
+        throw { status: 400, message: "Cần project_id và email" };
+    }
+
+    // Lấy user_id từ email
+    const user_id = await getUserIdByEmail(email);
+
+    // Check project tồn tại
+    const project = await Project.findByPk(project_id);
+    if (!project) {
+        throw { status: 404, message: "Dự án không tồn tại" };
+    }
+    if (role === "Admin" && project.owner_id !== inviter_id) {
+        throw { status: 403, message: "Chỉ Owner mới có thể thêm Admin vào dự án" };
+    }
+
+    if (role === "Owner") {
+        throw { status: 403, message: "Không thể thêm Owner mới" };
+    }
+
+    const user = await User.findByPk(user_id);
+    if (!user) {
+        throw { status: 404, message: "Người dùng không tồn tại" };
+    }
+
+    const existed = await ProjectMember.findOne({
+        where: { project_id, user_id }
+    });
+
+    if (existed) {
+        throw { status: 400, message: "Người dùng đã là thành viên của dự án" };
+    }
+
+    const newMember = await ProjectMember.create({
+        project_id,
+        user_id,
+        role
+    });
+    return {
+        message: "Thêm thành viên vào dự án thành công",
+        member: {
+            user_id: user.user_id,
+            email: user.email,
+            username: user.username,
+            role
+        }
+    };
 }
 export async function deleteProjectService(project_id, owner_id) {
     const project = await Project.findByPk(project_id);
