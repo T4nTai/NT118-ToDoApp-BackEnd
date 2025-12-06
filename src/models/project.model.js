@@ -33,9 +33,9 @@ export const Project = sequelize.define('Project', {
   },
 
   status: {
-    type: DataTypes.ENUM('Active', 'On Hold', 'Completed', 'Archived'),
+    type: DataTypes.ENUM('To Do', 'In Progress', 'Completed'),
     allowNull: false,
-    defaultValue: 'Active'
+    defaultValue: 'To Do'
   },
 
   owner_id: {
