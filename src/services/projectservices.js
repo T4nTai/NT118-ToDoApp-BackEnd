@@ -168,7 +168,7 @@ export async function assignProjectToGroupService(project_id, group_id, inviter_
             await ProjectMember.create({
                 project_id,
                 user_id: user.user_id,
-                role: "Member"
+                project_role: "Member"
             });
         }
         await sendNotificationEmail({
