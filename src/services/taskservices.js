@@ -101,7 +101,20 @@ export async function viewTasksCreatedByUserService(user_id, statusFilter) {
       { model: User, as: "creator", attributes: ["user_id", "username", "email"] },
       { model: User, as: "assignee", attributes: ["user_id", "username", "email"] },
       { model: Project, as: "project", attributes: ["project_id", "name"] },
-      { model: Subtask, as: "subtasks" }
+      { 
+        model: Subtask, 
+        as: "subtasks",
+        attributes: [
+          "subtask_id",
+          "task_id",
+          "title",
+          "priority",
+          "description",
+          "status",
+          "due_date",
+          "created_at"
+        ]
+      }
     ],
     order: [["created_at", "DESC"]]
   });
