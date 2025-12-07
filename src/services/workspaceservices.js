@@ -53,7 +53,7 @@ export async function getGroupsByWorkspaceService(workspace_id) {
         where: { workspace_id },
         attributes: {
             include: [
-                [Sequelize.fn("COUNT", Sequelize.col("members.user_id")), "member_count"]
+                [Sequelize.fn("COUNT", Sequelize.col("groupMembers.user_id")), "member_count"]
             ]
         },
         include: [{
