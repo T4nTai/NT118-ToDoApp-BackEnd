@@ -268,6 +268,34 @@ export async function addMemberToProjectService({ project_id, email, role = "Mem
         }
     };
 }
+
+export async function getProjectsOfMemberService(user_id) {
+    const user = await User.findByPk(user_id);
+    if (!user) throw { status: 404, message: "Người dùng không tồn tại" };
+    const memberships = await ProjectMember.findAll({
+        where: { user_id },
+        include: [
+            {
+                model: Project,
+                as: "project",
+                include: [
+                    {
+                        model: User,
+                        as: "members",
+                        attributes: ["user_id", "username", "email"],
+                        through: { attributes: ["role"] }
+                    },
+                    {
+                        model: User,
+                        as: "owner",
+                        attributes: ["user_id", "username", "email"]
+                    }
+                ]
+            }
+        ]
+    });
+    return memberships.map(m => m.project);
+}
 export async function deleteProjectService(project_id, owner_id) {
     const project = await Project.findByPk(project_id);
 
