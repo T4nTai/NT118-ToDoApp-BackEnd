@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authenticateJWT } from "../middleware/auth.middleware.js";
 import multer from "multer";
-import { createProject, getProjectsByOwner, assignProjectToGroup, assignProjectToUser, deleteProject, updateProject } from "../controllers/project.controller.js";
+import { createProject, getProjectsByOwner, assignProjectToGroup, assignProjectToUser, deleteProject, updateProject, getMyProjects } from "../controllers/project.controller.js";
 
 const ProjectRouter = Router();
 const upload = multer({ dest: "uploads/" });
@@ -17,5 +17,7 @@ ProjectRouter.post("/assign-user", authenticateJWT, assignProjectToUser);
 ProjectRouter.put("/:project_id/update", authenticateJWT, updateProject);
 
 ProjectRouter.delete("/:project_id", authenticateJWT, deleteProject);
+
+ProjectRouter.get("/my-projects", authenticateJWT, getMyProjects);
 export default ProjectRouter;
 

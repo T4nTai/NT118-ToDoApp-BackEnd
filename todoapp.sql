@@ -241,6 +241,7 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `start_date` DATE,
   `due_date` DATE,
+  `completed_at` DATE,
   PRIMARY KEY (`task_id`),
 
   FOREIGN KEY (`project_id`)
