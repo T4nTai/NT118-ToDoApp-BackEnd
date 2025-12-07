@@ -1,4 +1,4 @@
-import { createSubtaskService, viewSubtaskByTaskService, updateSubtaskService } from "../services/subtaskservices.js";
+import { createSubtaskService, viewSubtaskByTaskService, updateSubtaskService, deleteSubtaskService } from "../services/subtaskservices.js";
 
 export async function createSubtask(req, res, next) {
     try {
@@ -47,6 +47,18 @@ export async function updateSubtask(req, res, next) {
     } catch (err) {
         if (err?.status)
             return res.status(err.status).json({ message: err.message });
+        next(err);
+    }
+}
+
+export async function deleteSubtask(req, res, next) {
+    try {
+        const { subtask_id } = req.params;
+
+        const result = await deleteSubtaskService(subtask_id);
+
+        res.json(result);
+    } catch (err) {
         next(err);
     }
 }

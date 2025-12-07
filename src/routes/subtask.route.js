@@ -3,7 +3,8 @@ import { authenticateJWT } from "../middleware/auth.middleware.js";
 import {
   createSubtask,
   viewSubtaskByTask,
-  updateSubtask
+  updateSubtask,
+  deleteSubtask
 } from "../controllers/subtask.controller.js";
 
 const SubTaskRouter = Router();
@@ -13,5 +14,7 @@ SubTaskRouter.get("/task/:task_id", authenticateJWT, viewSubtaskByTask );
 SubTaskRouter.post("/task/:task_id", authenticateJWT, createSubtask );
 
 SubTaskRouter.patch("/:subtask_id", authenticateJWT, updateSubtask );
+
+SubTaskRouter.delete("/:subtask_id", authenticateJWT, deleteSubtask );
 
 export default SubTaskRouter;

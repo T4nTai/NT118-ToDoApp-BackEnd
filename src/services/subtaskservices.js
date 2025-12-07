@@ -71,6 +71,30 @@ export async function updateSubtaskService(subtask_id, updateData) {
     return subtask;
 }
 
+export async function deleteSubtaskService(subtask_id) {
+    // 1. Kiểm tra subtask tồn tại
+    const subtask = await Subtask.findByPk(subtask_id);
+
+    if (!subtask) {
+        throw { status: 404, message: "Subtask không tồn tại" };
+    }
+
+    const task_id = subtask.task_id;
+
+    // 2. Xóa subtask
+    await Subtask.destroy({
+        where: { subtask_id }
+    });
+
+    // 3. Cập nhật trạng thái task nếu cần
+    await updateTaskStatusIfSubtasksCompletedService(task_id);
+
+    return { 
+        message: "Xóa subtask thành công", 
+        deleted_subtask_id: subtask_id 
+    };
+}
+
 
 
 
