@@ -58,7 +58,7 @@ export async function getGroupsByWorkspaceService(workspace_id) {
         },
         include: [{
             model: GroupMember,
-            as: "members",
+            as: "groupMembers",
             attributes: []
         }],
         group: ["Group.group_id"],
