@@ -1,4 +1,4 @@
-import { createTaskService, viewTasksAssignToService, assignTaskService, updateTaskService, deleteTaskService, viewTasksCreatedByUserService, viewTasksInProjectService } from "../services/taskservices.js";
+import { createTaskService, viewTasksAssignToService, assignTaskService, updateTaskService, deleteTaskService, viewTasksCreatedByUserService, viewTasksInProjectService, viewTasksByMilestoneService } from "../services/taskservices.js";
   
 
 export async function createTask(req, res, next) {
@@ -116,3 +116,25 @@ export async function deleteTask(req, res, next) {
         next(err);
     }
 }
+
+export async function viewTasksByMilestone(req, res, next) {
+  try {
+    const { milestone_id } = req.params;
+    const { status, step } = req.query;
+
+    const result = await viewTasksByMilestoneService(
+      milestone_id,
+      status || null,
+      step || null
+    );
+
+    return res.json(result);
+
+  } catch (err) {
+    if (err?.status) {
+      return res.status(err.status).json({ message: err.message });
+    }
+    next(err);
+  }
+}
+

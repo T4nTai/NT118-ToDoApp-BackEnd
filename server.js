@@ -3,6 +3,8 @@ import router from './src/routes/index.js';
 import { PORT } from './src/config/env.js';
 import sequelize from './src/config/db.js';
 import cors from 'cors';
+import http from "http";
+import { initSocket } from "./src/socket.js";
 import initAssociations from './src/models/association.model.js';
 
 const app = express();
@@ -12,6 +14,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+const server = http.createServer(app);
+initSocket(server);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use('/api', router);

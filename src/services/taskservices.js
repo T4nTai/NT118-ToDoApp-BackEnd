@@ -293,5 +293,66 @@ export async function deleteTaskService(task_id) {
 }
 
 
+export async function viewTasksByMilestoneService(milestone_id, statusFilter = null, stepFilter = null) {
+  const milestone = await Milestone.findByPk(milestone_id);
+
+  if (!milestone) {
+    throw { status: 404, message: "Milestone không tồn tại" };
+  }
+
+  const whereClause = {
+    milestone_id,
+    ...(statusFilter && { status: statusFilter }),
+    ...(stepFilter && { step_id: stepFilter }),
+  };
+
+  const tasks = await Task.findAll({
+    where: whereClause,
+    include: [
+      {
+        model: User,
+        as: "creator",
+        attributes: ["user_id", "username", "email"]
+      },
+      {
+        model: User,
+        as: "assignee",
+        attributes: ["user_id", "username", "email"]
+      },
+      {
+        model: Subtask,
+        as: "subtasks",
+        attributes: [
+          "subtask_id",
+          "title",
+          "priority",
+          "status",
+          "due_date"
+        ]
+      },
+      {
+        model: WorkflowStep,
+        as: "step",
+        attributes: ["step_id", "name", "step_order"]
+      },
+      {
+        model: Project,
+        as: "project",
+        attributes: ["project_id", "name"]
+      }
+    ],
+    order: [["created_at", "DESC"]]
+  });
+
+  return {
+    milestone: {
+      milestone_id: milestone.milestone_id,
+      name: milestone.name,
+      due_date: milestone.due_date
+    },
+    total: tasks.length,
+    tasks
+  };
+}
 
 
