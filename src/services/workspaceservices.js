@@ -3,6 +3,8 @@ import { User } from '../models/auth.model.js';
 import crypto from 'crypto';
 import { WorkspaceMember } from '../models/workspace_member.model.js';
 import { getUserIdByEmail } from './authservices.js';
+import { Group } from "../models/group.model.js";
+import { GroupMember } from "../models/group_member.model.js";
 
 
 export function generateWorkspaceToken() {
@@ -44,6 +46,25 @@ export async function joinWorkspaceByTokenService(user_id, token) {
         workspace,
         member: result
     };
+}
+export async function getGroupsByWorkspaceService(workspace_id) {
+    const groups = await Group.findAll({
+        where: { workspace_id },
+        attributes: {
+            include: [
+                [Sequelize.fn("COUNT", Sequelize.col("members.user_id")), "member_count"]
+            ]
+        },
+        include: [{
+            model: GroupMember,
+            as: "members",
+            attributes: []
+        }],
+        group: ["Group.group_id"],
+        order: [["group_id", "ASC"]]
+    });
+
+    return groups;
 }
 
 export async function getMyWorkspacesService(user_id) {

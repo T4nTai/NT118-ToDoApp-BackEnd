@@ -1,4 +1,4 @@
-import { createWorkSpaceService, addWorkspaceMemberService, getMyWorkspacesService, deleteWorkspaceService, getListMemberService, removeWorkspaceMemberService, updateWorkspaceMemberRoleService, leaveWorkspaceService, joinWorkspaceByTokenService } from "../services/workspaceservices.js";
+import { createWorkSpaceService, addWorkspaceMemberService, getMyWorkspacesService, deleteWorkspaceService, getListMemberService, removeWorkspaceMemberService, updateWorkspaceMemberRoleService, leaveWorkspaceService, joinWorkspaceByTokenService, getGroupsByWorkspaceService } from "../services/workspaceservices.js";
 
 export async function createWorkspace(req, res, next) {
     try {
@@ -21,6 +21,16 @@ export async function joinWorkspace(req, res, next) {
         const { token } = req.body;
         const data = await joinWorkspaceByTokenService(user_id, token);
         res.json(data);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function getGroupsByWorkspace(req, res, next) {
+    try {
+        const workspace_id = req.params;
+        const groups = await getGroupsByWorkspaceService(workspace_id);
+        return res.json({ groups });
     } catch (err) {
         next(err);
     }
