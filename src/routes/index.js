@@ -8,6 +8,7 @@ import SubTaskRouter from './subtask.route.js';
 import CommentRouter from './comment.routes.js';
 import WorkspaceRouter from './workspace.routes.js';
 import MilestoneRouter from './milestone.route.js';
+import NotificationRouter from "./notification.routes.js";
 
 const router = Router();
 
@@ -34,6 +35,8 @@ router.use("/comments", CommentRouter);
 router.use("/workspaces", WorkspaceRouter);
 
 router.use("/milestones", MilestoneRouter);
+
+router.use("/notifications", NotificationRouter);
 
 
 export default router;
