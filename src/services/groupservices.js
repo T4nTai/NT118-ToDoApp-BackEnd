@@ -2,20 +2,20 @@ import { Group } from '../models/group.model.js';
 import { User } from '../models/auth.model.js';
 import { GroupMember } from '../models/group_member.model.js';
 
-export async function createGroupService({ name, description, owner_id }) {
-  if (!name || !owner_id) {
-    throw { status: 400, message: "Cần nhập đầy đủ Tên nhóm và ID chủ sở hữu" };
+export async function createGroupService({ group_name, description, owner_id, workspace_id }) {
+  if (!group_name || !owner_id || !workspace_id) {
+    throw { status: 400, message: "Thiếu group_name, owner_id hoặc workspace_id" };
   }
-
   const group = await Group.create({
-    name,
-    description
+    name: group_name,
+    description,
+    workspace_id
   });
 
   await GroupMember.create({
     group_id: group.group_id,
     user_id: owner_id,
-    role: 'Owner'
+    role: "Owner"
   });
 
   return group;
