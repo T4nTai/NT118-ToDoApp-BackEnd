@@ -28,7 +28,7 @@ export async function joinWorkspace(req, res, next) {
 
 export async function getGroupsByWorkspace(req, res, next) {
     try {
-        const workspace_id = req.params;
+        const workspace_id =  Number(req.params);
         const groups = await getGroupsByWorkspaceService(workspace_id);
         return res.json({ groups });
     } catch (err) {
