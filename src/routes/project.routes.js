@@ -19,5 +19,6 @@ ProjectRouter.put("/:project_id/update", authenticateJWT, updateProject);
 ProjectRouter.delete("/:project_id", authenticateJWT, deleteProject);
 
 ProjectRouter.get("/my-projects", authenticateJWT, getMyProjects);
+
 export default ProjectRouter;
 

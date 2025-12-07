@@ -13,9 +13,9 @@ export const ProjectMember = sequelize.define("ProjectMember", {
     primaryKey: true
   },
   role: {
-    type: DataTypes.ENUM("Owner", "Manager", "Contributor", "Viewer"),
+    type: DataTypes.ENUM("Owner", "Manager", "Member", "Viewer"),
     allowNull: false,
-    defaultValue: "Contributor"
+    defaultValue: "Member"
   },
   joined_at: {
     type: DataTypes.DATE,
