@@ -28,9 +28,26 @@ export async function joinWorkspace(req, res, next) {
 
 export async function getGroupsByWorkspace(req, res, next) {
     try {
-        const workspace_id =  Number(req.params);
+        let workspace_id = req.params.workspace_id;
+
+        // Nếu params là object → extract ra số
+        if (typeof workspace_id === "object") {
+            if ("workspace_id" in workspace_id) {
+                workspace_id = workspace_id.workspace_id;
+            } else if ("id" in workspace_id) {
+                workspace_id = workspace_id.id;
+            }
+        }
+
+        workspace_id = Number(workspace_id);
+
+        if (isNaN(workspace_id)) {
+            throw { status: 400, message: "workspace_id không hợp lệ" };
+        }
+
         const groups = await getGroupsByWorkspaceService(workspace_id);
-        return res.json({ groups });
+        return res.json(groups);
+
     } catch (err) {
         next(err);
     }
