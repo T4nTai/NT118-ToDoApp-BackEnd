@@ -5,6 +5,7 @@ import { Project } from '../models/project.model.js';
 import { ProjectMember } from '../models/project_member.model.js';
 import { WorkflowStep } from '../models/workflow_step.model.js';
 import { Milestone } from '../models/milestone.model.js';
+import { NotificationHook } from "../hooks/notification.hook.js";
 
 
 export async function createTaskService({ title, description, project_id, milestone_id, assigned_to, created_by, priority, start_date, due_date }) {
@@ -42,6 +43,10 @@ export async function createTaskService({ title, description, project_id, milest
             if (firstStep) step_id = firstStep.step_id;
         }
         if (assigned_to) {
+            const assignedUser = await User.findByPk(assigned_to);
+            if (assignedUser) {
+              await NotificationHook.taskAssigned(task, assignedUser);
+            }
             const member =
                 await ProjectMember.findOne({
                     where: { project_id, user_id: assigned_to },
@@ -73,6 +78,10 @@ export async function createTaskService({ title, description, project_id, milest
         due_date: due_date || null,
         step_id,
     });
+    const admins = await User.findAll({ where: { role: "Admin" } });
+    for (const admin of admins) {
+    await NotificationHook.taskCreatedByUser(task, created_by, admin);
+    }
     return task;
 }
 
@@ -219,7 +228,8 @@ export async function assignTaskService(task_id, user_id) {
     }
     task.assigned_to = user_id;
     await task.save();
-
+    const targetUser = await User.findByPk(user_id);
+    await NotificationHook.taskAssigned(task, targetUser);
     return {
         message: "Giao task thành công",
         task,
@@ -243,6 +253,8 @@ export async function updateTaskService(task_id, updateData) {
         "completed_at"
     ];
     const validUpdates = {};
+    let isStatusChanged = false;
+    let isCompleted = false; 
     for (const key of Object.keys(updateData)) {
         if (allowedFields.includes(key)) {
             validUpdates[key] = updateData[key];
@@ -251,8 +263,17 @@ export async function updateTaskService(task_id, updateData) {
     if (Object.keys(validUpdates).length === 0) {
         throw { status: 400, message: "Không có field hợp lệ để cập nhật" };
     }
+    if (validUpdates.assigned_to && validUpdates.assigned_to !== task.assigned_to) {
+        isAssignChanged = true;
+    }
     Object.assign(task, validUpdates);
     await task.save();
+     if (isAssignChanged) {
+        const newUser = await User.findByPk(validUpdates.assigned_to);
+        if (newUser) {
+            await NotificationHook.taskAssigned(task, newUser);
+        }
+    }
     return task;
 }
 
