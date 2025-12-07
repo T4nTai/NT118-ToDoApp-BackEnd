@@ -3,7 +3,6 @@ import { Project } from '../models/project.model.js';
 import { ProjectMember } from '../models/project_member.model.js';
 import { Group } from '../models/group.model.js';
 import { GroupMember } from '../models/group_member.model.js';
-import { sendNotificationEmail } from '../ultis/sendmail.js';
 import { WorkflowStep } from '../models/workflow_step.model.js';
 import { Workflow } from '../models/workflow.model.js';
 import { Workspace } from '../models/workspace.model.js'; // thêm để check workspace tồn tại
@@ -168,7 +167,12 @@ export async function updateProjectService(project_id, owner_id, updates) {
     return project;
 }
 
-export async function assignProjectToGroupService(project_id, group_id, inviter_id) {
+export async function assignProjectToGroupService(
+    project_id,
+    group_id,
+    inviter_id,
+    role = "Member" 
+) {
     const project = await Project.findByPk(project_id);
     if (!project) throw { status: 404, message: "Dự án không tồn tại" };
 
@@ -176,6 +180,7 @@ export async function assignProjectToGroupService(project_id, group_id, inviter_
     if (!group) throw { status: 404, message: "Nhóm không tồn tại" };
 
     const inviter = await User.findByPk(inviter_id);
+
     project.assigned_group_id = group_id;
     project.assigned_user_id = null;
     await project.save();
@@ -196,21 +201,21 @@ export async function assignProjectToGroupService(project_id, group_id, inviter_
             await ProjectMember.create({
                 project_id,
                 user_id: user.user_id,
-                project_role: "Member"
+                project_role: role
             });
+        } else {
+            if (exists.project_role !== role) {
+                exists.project_role = role;
+                await exists.save();
+            }
         }
-        await sendNotificationEmail({
-            to: user.email,
-            inviterName: inviter?.username,
-            targetType: "Dự án",
-            targetName: project.name,
-            role: "Member"
-        });
     }
 
     return project;
 }
-export async function assignProjectToUserService(project_id, user_id, inviter_id) {
+
+
+export async function assignProjectToUserService(project_id, user_id, inviter_id, role = "Member") {
     const project = await Project.findByPk(project_id);
     if (!project) throw { status: 404, message: "Dự án không tồn tại" };
 
@@ -230,24 +235,14 @@ export async function assignProjectToUserService(project_id, user_id, inviter_id
         await ProjectMember.create({
             project_id,
             user_id,
-            role: "Member"
+            role
         });
     }
-
-    await sendNotificationEmail({
-        to: user.email,
-        inviterName: inviter?.username,
-        targetType: "Dự án",
-        targetName: project.name, 
-        role: "Manager"
-    });
-
     return project;
 }
 
 export async function addMemberToProjectService({ project_id, email, role = "Member", inviter_id }) {
 
-    // Validate
     if (!project_id || !email) {
         throw { status: 400, message: "Cần project_id và email" };
     }

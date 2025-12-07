@@ -5,6 +5,7 @@ import { WorkspaceMember } from '../models/workspace_member.model.js';
 import { getUserIdByEmail } from './authservices.js';
 import { Group } from "../models/group.model.js";
 import { GroupMember } from "../models/group_member.model.js";
+import { NotificationHook } from '../hooks/notification.hook.js';
 import Sequelize  from 'sequelize';
 
 
@@ -109,6 +110,7 @@ export async function addWorkspaceMemberService( workspace_id, email, workspace_
         user_id,
         workspace_role
     });
+    await NotificationHook.workspaceMemberAdded(user_id, ws);
     return workspaceMember;
 }
 
