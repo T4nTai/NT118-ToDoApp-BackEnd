@@ -107,7 +107,7 @@ export async function getProjectMembersService(project_id) {
         ],
         order: [
             // sắp xếp theo role: Owner → Admin → Member
-            [ProjectMember.sequelize.literal(`FIELD(project_role, 'Owner', 'Admin', 'Member')`)]
+            [ProjectMember.sequelize.literal(`FIELD(role, 'Owner', 'Admin', 'Member')`)]
         ]
     });
 
