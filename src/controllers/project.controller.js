@@ -95,14 +95,14 @@ export async function updateProject(req, res, next) {
 
 export async function assignProjectToGroup(req, res, next) {
     try {
-        const { project_id, group_id } = req.body;
+        const { project_id, group_id, role } = req.body;
         const inviter_id = req.user.id;
 
         if (!project_id || !group_id) {
             return res.status(400).json({ message: "Thiếu project_id hoặc group_id" });
         }
 
-        const project = await assignProjectToGroupService(project_id, group_id, inviter_id);
+        const project = await assignProjectToGroupService(project_id, group_id, inviter_id,  role || "Member");
 
         return res.status(200).json({
             message: "Giao dự án cho nhóm thành công",
@@ -116,14 +116,14 @@ export async function assignProjectToGroup(req, res, next) {
 
 export async function assignProjectToUser(req, res, next) {
     try {
-        const { project_id, user_id } = req.body;
+        const { project_id, user_id, role } = req.body;
         const inviter_id = req.user.id;
 
         if (!project_id || !user_id) {
             return res.status(400).json({ message: "Thiếu project_id hoặc user_id" });
         }
 
-        const project = await assignProjectToUserService(project_id, user_id, inviter_id);
+        const project = await assignProjectToUserService(project_id, user_id, inviter_id,  role || "Member");
 
         return res.status(200).json({
             message: "Giao dự án cho người dùng thành công",

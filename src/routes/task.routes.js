@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { authenticateJWT } from "../middleware/auth.middleware.js";
-import { viewTasksAssignToUser,viewTasksCreatedByUser ,createTask, assignTask, deleteTask, updateTask, viewTasksInProject, viewTasksByMilestone } from "../controllers/task.controller.js";
+import { requireProjectRole } from "../middleware/requireRole.middleware.js";
+import { viewTasksAssignToUser,viewTasksCreatedByUser ,createTask, assignTask, deleteTask, updateTask, viewTasksInProject, viewTasksByMilestone,  } from "../controllers/task.controller.js";
 
 const TaskRouter = Router();
 
-TaskRouter.get("/user-tasks", authenticateJWT, viewTasksAssignToUser);
+TaskRouter.get("/user-tasks", authenticateJWT, requireProjectRole, viewTasksAssignToUser);
 
 TaskRouter.get("/created-by-me", authenticateJWT, viewTasksCreatedByUser);
 
