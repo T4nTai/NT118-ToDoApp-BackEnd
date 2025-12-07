@@ -78,28 +78,54 @@ export class ProjectController {
   }
 
   static async assignGroup(req, res) {
-    try {
-      await ProjectService.addGroup({
-        project_id: req.params.project_id,
-        group_id: req.body.group_id,
-        requester_id: Number(req.headers["x-user-id"])
-      });
-      res.json({ message: "Group assigned" });
-    } catch (err) {
-      res.status(err.status || 500).json({ message: err.message });
+  try {
+    const project_id = req.params.project_id;
+    const group_id = req.body.group_id;
+    const requester_id = Number(req.headers["x-user-id"]);
+    const role = req.body.role || "Member";
+    if (!group_id) {
+      return res.status(400).json({ message: "group_id is required" });
     }
+    const project = await ProjectService.assignGroup({
+      project_id,
+      group_id,
+      requester_id,
+      role
+    });
+    return res.json({
+      message: "Group assigned successfully",
+      role,
+      project
+    });
+  } catch (err) {
+    return res.status(err.status || 500).json({ message: err.message });
   }
+}
+
 
   static async assignUser(req, res) {
-    try {
-      await ProjectService.assignToUser({
-        project_id: req.params.project_id,
-        target_user_id: req.body.user_id,
-        requester_id: Number(req.headers["x-user-id"])
-      });
-      res.json({ message: "User assigned" });
-    } catch (err) {
-      res.status(err.status || 500).json({ message: err.message });
+  try {
+    const project_id = req.params.project_id;
+    const target_user_id = req.body.user_id;
+    const requester_id = Number(req.headers["x-user-id"]);
+    const role = req.body.role || "Member";
+    if (!target_user_id) {
+      return res.status(400).json({ message: "user_id is required" });
     }
+    const project = await ProjectService.assignToUser({
+      project_id,
+      target_user_id,
+      requester_id,
+      role
+    });
+    return res.json({
+      message: "User assigned successfully",
+      role,
+      project
+    });
+  } catch (err) {
+    return res.status(err.status || 500).json({ message: err.message });
   }
+}
+
 }

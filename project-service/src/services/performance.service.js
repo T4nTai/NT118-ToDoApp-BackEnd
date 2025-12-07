@@ -1,6 +1,6 @@
 import { PerformanceRecord } from "../models/performance_record.model.js";
-import { checkProjectMember } from "../helper/checkMember.js";
-import { validateUserExists } from "../helper/validateUser.js";
+import { checkProjectMember } from "../helper/project.helper.js";
+import { checkUserExists } from "../helper/validateUser.js";
 
 export class PerformanceService {
 
@@ -13,7 +13,7 @@ export class PerformanceService {
     requester_id
   }) {
     await checkProjectMember(project_id, requester_id);
-    await validateUserExists(target_user_id);
+    await checkUserExists(target_user_id);
 
     return await PerformanceRecord.create({
       project_id,

@@ -1,5 +1,5 @@
 import { Milestone } from "../models/milestone.model.js";
-import { checkProjectMember } from "../helper/checkMember.js";
+import { checkProjectMember } from "../helper/project.helper.js";
 
 export class MilestoneService {
 

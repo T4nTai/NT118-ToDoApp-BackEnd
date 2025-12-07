@@ -1,104 +1,60 @@
-import { AuthService } from "../services/auth.services.js";
+import {
+  registerService,
+  loginService,
+  refreshTokenService,
+} from "../services/auth.service.js";
 
-export class AuthController {
-  static async register(req, res, next) {
-    try {
-      const user = await AuthService.signUp(req.body);
-      res.json({ message: "Đăng Ký Thành Công", user });
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  static async login(req, res, next) {
-    try {
-      const { email, phone_number, password } = req.body;
-      const mode = req.query.mode || "web"; 
-
-      const result = await AuthService.signIn(
-        email,
-        phone_number,
-        password,
-        mode
-      );
-
-      if (result.type === "web") {
-        res.cookie("refreshToken", result.cookieRefreshToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "strict",
-          maxAge: 7 * 24 * 60 * 60 * 1000
-        });
-
-        return res.json({
-          message: "Đăng Nhập Thành Công",
-          user: result.user,
-          accessToken: result.accessToken
-        });
-      }
-
-      return res.json({
-        message: "Đăng Nhập Thành Công",
-        user: result.user,
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken
-      });
-
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  static async refresh(req, res, next) {
-    try {
-      const mode = req.query.mode || "web";  
-      const tokenFromCookie = req.cookies.refreshToken;
-      const tokenFromBody = req.body.refreshToken;
-      const refreshToken = mode === "web" ? tokenFromCookie : tokenFromBody;
-      const data = await AuthService.refreshService(refreshToken, mode);
-      if (data.type === "web") {
-        return res.json({
-          accessToken: data.accessToken
-        });
-      }
-      return res.json({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken
-      });
-
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  static async getUserById(req, res, next) {
-    try {
-      const user_id = req.params.user_id;
-      const user = await AuthService.getUserById(user_id);
-      res.json(user);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  static async logout(req, res, next) {
+export async function register(req, res, next) {
   try {
-    const mode = req.query.mode || "web";
-    const tokenFromCookie = req.cookies.refreshToken;
-    const tokenFromBody = req.body.refreshToken;
-
-    const refreshToken = mode === "web" ? tokenFromCookie : tokenFromBody;
-    const result = await AuthService.signOut(refreshToken);
-    if (mode === "web") {
-      res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "strict"
-      });
-    }
-    return res.json(result);
+    const result = await registerService(req.body);
+    return res.status(201).json({
+      message: "Đăng ký thành công",
+      user: {
+        user_id: result.user.user_id,
+        email: result.user.email,
+        username: result.user.username,
+        role: result.user.role,
+      },
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
   } catch (err) {
+    if (err.status) return res.status(err.status).json({ message: err.message });
     next(err);
   }
 }
+
+export async function login(req, res, next) {
+  try {
+    const result = await loginService(req.body);
+    return res.status(200).json({
+      message: "Đăng nhập thành công",
+      user: {
+        user_id: result.user.user_id,
+        email: result.user.email,
+        username: result.user.username,
+        role: result.user.role,
+      },
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
+}
+
+export async function refreshToken(req, res, next) {
+  try {
+    const { refresh_token } = req.body;
+    const result = await refreshTokenService(refresh_token);
+    return res.status(200).json({
+      message: "Refresh token thành công",
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ message: err.message });
+    next(err);
+  }
 }

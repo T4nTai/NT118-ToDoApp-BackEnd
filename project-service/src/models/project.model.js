@@ -16,8 +16,8 @@ export const Project = sequelize.define(
     },
     description: DataTypes.TEXT,
     status: {
-      type: DataTypes.ENUM("Active", "On Hold", "Completed", "Archived"),
-      defaultValue: "Active"
+      type: DataTypes.ENUM('To Do', 'In Progress', 'Completed'),
+      defaultValue: "To Do"
     },
     priority: {
       type: DataTypes.ENUM("Low", "Medium", "High", "Critical"),

@@ -1,9 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-
 dotenv.config();
 const { JWT_SECRET } = process.env;
-
 export function authMiddleware(req, res, next) {
   const authHeader = req.headers["authorization"];
 
@@ -16,6 +14,10 @@ export function authMiddleware(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
+    const userId = decoded.user_id || decoded.id;
+    if (userId) {
+      req.headers["x-user-id"] = String(userId);
+    }
     next();
   } catch (err) {
     console.error("JWT verify error:", err.message);

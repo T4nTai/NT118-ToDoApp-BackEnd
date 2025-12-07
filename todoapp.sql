@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS `projects` (
   `workspace_id` INT NOT NULL,    -- workspace service
   `name` VARCHAR(255) NOT NULL,
   `description` TEXT,
-  `status` ENUM('Active', 'On Hold', 'Completed', 'Archived') NOT NULL DEFAULT 'Active',
+  `status` ENUM('To Do','In Progress','Completed') NOT NULL DEFAULT 'To Do',
   `priority` ENUM('Low', 'Medium', 'High', 'Critical') NOT NULL DEFAULT 'Medium',
   `owner_id` INT NOT NULL,        -- auth service
   `assigned_group_id` INT NULL,   -- group service
@@ -155,6 +155,7 @@ CREATE TABLE IF NOT EXISTS `milestones` (
   `project_id` INT NOT NULL,
   `name` VARCHAR(100) NOT NULL,
   `description` TEXT,
+  `start_date` DATE,
   `due_date` DATE,
   `is_completed` TINYINT(1) DEFAULT 0,
   `completed_at` DATETIME,
@@ -248,6 +249,7 @@ CREATE TABLE IF NOT EXISTS `subtasks` (
   `priority` ENUM('Low', 'Medium', 'High', 'Critical') NOT NULL DEFAULT 'Medium',
   `description` TEXT,
   `status` ENUM('To Do', 'In Progress', 'Review', 'Done', 'Blocked') NOT NULL DEFAULT 'To Do',
+  `due_date` DATE,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`subtask_id`),
 
@@ -345,3 +347,47 @@ CREATE TABLE IF NOT EXISTS `files` (
   INDEX `idx_file_context` (`context_type`, `context_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE SCHEMA IF NOT EXISTS `todo_notification`
+  DEFAULT CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+USE `todo_notification`;
+
+
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `notification_id` INT NOT NULL AUTO_INCREMENT,
+  
+  `user_id` INT NOT NULL,  -- auth-service (không FK)
+
+  -- loại thông báo
+  `type` ENUM(
+      'project_assigned', 
+      'task_assigned',
+      'task_status_changed',
+      'task_comment',
+      'task_due_soon',
+      'project_due_soon',
+      'workspace_invite',
+      'group_invite',
+      'performance_review',
+      'system'
+  ) NOT NULL,
+
+  `title` VARCHAR(255) NOT NULL,
+  `message` TEXT NOT NULL,
+
+  -- context để biết thông báo này liên quan đến entity nào
+  `context_type` ENUM('task', 'project', 'workspace', 'group', 'performance', 'system') DEFAULT NULL,
+  `context_id` INT DEFAULT NULL,  -- id của entity bên service khác
+
+  -- trạng thái người dùng
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_seen` TINYINT(1) NOT NULL DEFAULT 0,   -- đã hiện popup/real-time
+  `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`notification_id`),
+  INDEX `idx_notif_user` (`user_id`),
+  INDEX `idx_notif_context` (`context_type`, `context_id`),
+  INDEX `idx_notif_is_read` (`is_read`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

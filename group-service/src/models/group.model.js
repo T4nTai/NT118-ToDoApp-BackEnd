@@ -1,5 +1,6 @@
+// src/models/group.model.js
 import { DataTypes } from "sequelize";
-import { sequelize } from "../config/db.js";
+import sequelize from "../config/db.js";
 
 export const Group = sequelize.define(
   "Group",
@@ -9,20 +10,33 @@ export const Group = sequelize.define(
       autoIncrement: true,
       primaryKey: true
     },
+
     workspace_id: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
+      comment: "ID workspace (từ workspace-service)"
     },
+
     name: {
       type: DataTypes.STRING(100),
       allowNull: false
     },
-    description: DataTypes.TEXT
+
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
+    }
   },
   {
     tableName: "groups",
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: false
+    timestamps: false,
+    indexes: [
+      { fields: ["workspace_id"] }
+    ]
   }
 );
