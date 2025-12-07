@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticateJWT } from "../middleware/auth.middleware.js";
-import { viewTasksAssignToUser,viewTasksCreatedByUser ,createTask, assignTask, deleteTask, updateTask } from "../controllers/task.controller.js";
+import { viewTasksAssignToUser,viewTasksCreatedByUser ,createTask, assignTask, deleteTask, updateTask, viewTasksInProject } from "../controllers/task.controller.js";
 
 const TaskRouter = Router();
 
@@ -15,5 +15,7 @@ TaskRouter.post("/:task_id/assign", authenticateJWT, assignTask);
 TaskRouter.patch("/:task_id", authenticateJWT, updateTask);
 
 TaskRouter.delete("/:task_id", authenticateJWT, deleteTask);
+
+TaskRouter.get("/projects/:project_id/tasks", authenticateJWT, viewTasksInProject);
 
 export default TaskRouter;

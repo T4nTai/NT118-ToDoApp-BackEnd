@@ -3,6 +3,8 @@ import { User } from '../models/auth.model.js';
 import { Subtask } from '../models/subtask.model.js';
 import { Project } from '../models/project.model.js';
 import { ProjectMember } from '../models/project_member.model.js';
+import { WorkflowStep } from '../models/workflow_step.model.js';
+import { Milestone } from '../models/milestone.model.js';
 
 
 export async function createTaskService({ title, description, project_id, milestone_id, assigned_to, created_by, priority, start_date, due_date }) {
@@ -72,6 +74,73 @@ export async function createTaskService({ title, description, project_id, milest
         step_id,
     });
     return task;
+}
+
+export async function viewTasksInProjectService(project_id, statusFilter = null, stepFilter = null) {
+  const project = await Project.findByPk(project_id);
+
+  if (!project) {
+    throw { status: 404, message: "Project không tồn tại" };
+  }
+
+  const whereClause = {
+    project_id,
+    ...(statusFilter && { status: statusFilter }),
+    ...(stepFilter && { step_id: stepFilter }),
+  };
+
+  const tasks = await Task.findAll({
+    where: whereClause,
+    include: [
+      { 
+        model: User, 
+        as: "creator", 
+        attributes: ["user_id", "username", "email"] 
+      },
+      { 
+        model: User, 
+        as: "assignee", 
+        attributes: ["user_id", "username", "email"] 
+      },
+      { 
+        model: Subtask, 
+        as: "subtasks",
+        attributes: [
+          "subtask_id",
+          "task_id",
+          "title",
+          "description",
+          "priority",
+          "status",
+          "due_date",
+          "created_at"
+        ]
+      },
+      {
+        model: WorkflowStep,
+        as: "workflow_step",
+        attributes: ["step_id", "name", "step_order"]
+      },
+      {
+        model: Milestone,
+        as: "milestone",
+        attributes: ["milestone_id", "name", "due_date"]
+      }
+    ],
+    order: [
+      ["created_at", "DESC"]
+    ]
+  });
+
+  return {
+    project: {
+      project_id: project.project_id,
+      name: project.name,
+      description: project.description,
+    },
+    total: tasks.length,
+    tasks
+  };
 }
 
 export async function viewTasksAssignToService(user_id, statusFilter) {
