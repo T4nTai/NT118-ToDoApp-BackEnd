@@ -25,6 +25,10 @@ export const Milestone = sequelize.define('Milestone', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  start_date: {
+    type: DataTypes.DATEONLY,
+    allowNull: true
+  },
   due_date: {
     type: DataTypes.DATEONLY,
     allowNull: true

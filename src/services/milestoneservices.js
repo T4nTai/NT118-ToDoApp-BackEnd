@@ -2,7 +2,7 @@ import { Milestone } from "../models/milestone.model.js";
 import { Project } from "../models/project.model.js";
 
 
-export async function createMilestoneService({ project_id, name, description, due_date }) {
+export async function createMilestoneService({ project_id, name, description,start_date ,due_date }) {
     if (!project_id || !name) {
         throw { status: 400, message: "Thiếu project_id hoặc name" };
     }
@@ -16,6 +16,7 @@ export async function createMilestoneService({ project_id, name, description, du
         project_id,
         name,
         description,
+        start_date,
         due_date
     });
 

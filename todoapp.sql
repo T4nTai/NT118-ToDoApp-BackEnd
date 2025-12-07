@@ -185,6 +185,7 @@ CREATE TABLE IF NOT EXISTS `milestones` (
   `project_id` INT NOT NULL,
   `name` VARCHAR(100) NOT NULL,
   `description` TEXT,
+  `start_date` DATE,
   `due_date` DATE,
   `is_completed` TINYINT(1) DEFAULT 0,
   `completed_at` DATETIME,
