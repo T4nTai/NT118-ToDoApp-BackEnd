@@ -89,29 +89,23 @@ export async function createProjectService(data, file ) {
 }
 
 export async function getProjectMembersService(project_id) {
-    // Kiểm tra project tồn tại
     const project = await Project.findByPk(project_id);
     if (!project) {
         throw { status: 404, message: "Dự án không tồn tại" };
     }
 
-    // Lấy danh sách member
     const members = await ProjectMember.findAll({
         where: { project_id },
         include: [
             {
                 model: User,
-                as: "user", // alias CHUẨN 100%
+                as: "user",
                 attributes: ["user_id", "username", "email"]
             }
         ],
-        order: [
-            // sắp xếp theo role: Owner → Admin → Member
-            [ProjectMember.sequelize.literal(`FIELD(role, 'Owner', 'Admin', 'Member')`)]
-        ]
+        order: [["joined_at", "ASC"]]  // ✔ ổn định, không lỗi
     });
 
-    // Format output
     return members.map(m => ({
         user_id: m.user.user_id,
         username: m.user.username,
@@ -120,6 +114,7 @@ export async function getProjectMembersService(project_id) {
         joined_at: m.joined_at
     }));
 }
+
 
 export async function getProjectsByOwnerService(owner_id) {
     const user = await User.findByPk(owner_id, {
