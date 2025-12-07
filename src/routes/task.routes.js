@@ -5,11 +5,11 @@ import { viewTasksAssignToUser,viewTasksCreatedByUser ,createTask, assignTask, d
 
 const TaskRouter = Router();
 
-TaskRouter.get("/user-tasks", authenticateJWT, requireProjectRole, viewTasksAssignToUser);
+TaskRouter.get("/user-tasks", authenticateJWT,  viewTasksAssignToUser);
 
 TaskRouter.get("/created-by-me", authenticateJWT, viewTasksCreatedByUser);
 
-TaskRouter.post("/create", authenticateJWT, createTask);
+TaskRouter.post("/create", authenticateJWT, requireProjectRole, createTask);
 
 TaskRouter.post("/:task_id/assign", authenticateJWT, assignTask);
 

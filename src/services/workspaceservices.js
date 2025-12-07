@@ -110,7 +110,7 @@ export async function addWorkspaceMemberService( workspace_id, email, workspace_
         user_id,
         workspace_role
     });
-    await NotificationHook.workspaceMemberAdded(user_id, ws);
+    await NotificationHook.workspaceMemberAdded(user, workspace);
     return workspaceMember;
 }
 

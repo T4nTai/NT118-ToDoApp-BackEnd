@@ -8,6 +8,7 @@ import { Workflow } from '../models/workflow.model.js';
 import { Workspace } from '../models/workspace.model.js'; // thêm để check workspace tồn tại
 import cloudinary from "../config/cloudinary.js";
 import { getUserIdByEmail } from './authservices.js';
+import { NotificationHook } from "../hooks/notification.hook.js";
 
 
 // ============================================================
@@ -210,7 +211,6 @@ export async function assignProjectToGroupService(
             }
         }
     }
-
     return project;
 }
 
