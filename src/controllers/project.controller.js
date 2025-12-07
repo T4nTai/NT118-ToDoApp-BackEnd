@@ -5,7 +5,8 @@ import {
     assignProjectToUserService,
     updateProjectService,
     deleteProjectService,
-    getProjectsOfMemberService
+    getProjectsOfMemberService,
+    getProjectMembersService
 } from "../services/projectservices.js";
 
 export async function createProject(req, res, next) {
@@ -35,6 +36,19 @@ export async function createProject(req, res, next) {
         return res.status(err.status || 500).json({ message: err.message || "Lỗi server" });
     }
 }
+
+export async function getProjectMembers(req, res, next) {
+    try {
+        const { project_id } = req.params;
+
+        const members = await getProjectMembersService(project_id);
+
+        return res.json({ project_id, members });
+    } catch (err) {
+        next(err);
+    }
+}
+
 export async function getMyProjects(req, res) {
     try {
         const user_id = req.user.id;
