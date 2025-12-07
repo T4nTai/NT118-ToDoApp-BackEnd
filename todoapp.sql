@@ -396,58 +396,6 @@ CREATE TABLE IF NOT EXISTS `refresh_token` (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `notifications` (
-  `notification_id` INT NOT NULL AUTO_INCREMENT,
-  
-  -- Người nhận thông báo
-  `user_id` INT NOT NULL,
-
-  -- Loại thông báo
-  `type` ENUM(
-      'task_assigned',
-      'task_updated',
-      'task_status_changed',
-      'task_comment',
-      'task_due_soon',
-      'task_overdue',
-
-      'project_assigned',
-      'project_updated',
-      'project_completed',
-      'project_due_soon',
-
-      'workspace_invite',
-      'group_invite',
-
-      'performance_review',
-      'system'
-  ) NOT NULL,
-
-  -- Tiêu đề + nội dung thông báo
-  `title` VARCHAR(255) NOT NULL,
-  `message` TEXT NOT NULL,
-
-  -- Tham chiếu linh hoạt (polymorphic)
-  `context_type` ENUM('task', 'project', 'workspace', 'group', 'performance', 'system') DEFAULT NULL,
-  `context_id` INT DEFAULT NULL,
-
-  -- Trạng thái
-  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
-  `is_seen` TINYINT(1) NOT NULL DEFAULT 0,
-  `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
-
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-  PRIMARY KEY (`notification_id`),
-
-  INDEX `idx_notif_user` (`user_id`),
-  INDEX `idx_notif_context` (`context_type`, `context_id`),
-  INDEX `idx_notif_read` (`is_read`),
-
-  FOREIGN KEY (`user_id`)
-    REFERENCES `users` (`user_id`)
-    ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 
