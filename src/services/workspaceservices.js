@@ -5,6 +5,7 @@ import { WorkspaceMember } from '../models/workspace_member.model.js';
 import { getUserIdByEmail } from './authservices.js';
 import { Group } from "../models/group.model.js";
 import { GroupMember } from "../models/group_member.model.js";
+import Sequelize  from 'sequelize';
 
 
 export function generateWorkspaceToken() {
@@ -116,6 +117,7 @@ export async function getListMemberService(workspace_id) {
         where: { workspace_id },
         include: [{
             model: User,
+            as: "user",
             attributes: ["user_id", "email", "username"]
         }]
     });
