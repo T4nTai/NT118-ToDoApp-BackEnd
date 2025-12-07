@@ -1,4 +1,4 @@
-import { createTaskService, viewTasksAssignToService, assignTaskService, updateTaskService, deleteTaskService, viewTasksCreatedByUserService } from "../services/taskservices.js";
+import { createTaskService, viewTasksAssignToService, assignTaskService, updateTaskService, deleteTaskService, viewTasksCreatedByUserService, viewTasksInProjectService } from "../services/taskservices.js";
   
 
 export async function createTask(req, res, next) {
@@ -28,6 +28,31 @@ export async function viewTasksAssignToUser(req, res, next) {
     } catch (err) {
         if (err && err.status)
             return res.status(err.status).json({ message: err.message });
+        next(err);
+    }
+}
+
+export async function viewTasksInProject(req, res, next) {
+    try {
+        const { project_id } = req.params;
+        const { status, step_id } = req.query;
+
+        if (!project_id) {
+            return res.status(400).json({ message: "Thiếu project_id" });
+        }
+
+        const result = await viewTasksInProjectService(
+            project_id,
+            status || null,
+            step_id || null
+        );
+
+        return res.status(200).json(result);
+
+    } catch (err) {
+        if (err && err.status) {
+            return res.status(err.status).json({ message: err.message });
+        }
         next(err);
     }
 }
