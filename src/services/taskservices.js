@@ -5,7 +5,7 @@ import { Project } from '../models/project.model.js';
 import { ProjectMember } from '../models/project_member.model.js';
 
 
-export async function createTaskService({ title, description, project_id, group_id, milestone_id, assigned_to, created_by, priority, start_date, due_date }) {
+export async function createTaskService({ title, description, project_id, milestone_id, assigned_to, created_by, priority, start_date, due_date }) {
     if (!title || !created_by) {
         throw { status: 400, message: "Thiếu title hoặc created_by" };
     }
@@ -63,7 +63,6 @@ export async function createTaskService({ title, description, project_id, group_
         title,
         description,
         project_id: project_id || null,
-        group_id: group_id || null,
         milestone_id: milestone_id || null,
         created_by,
         assigned_to: assigned_to || null,
