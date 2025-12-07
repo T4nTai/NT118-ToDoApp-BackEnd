@@ -118,7 +118,7 @@ export async function viewTasksInProjectService(project_id, statusFilter = null,
       },
       {
         model: WorkflowStep,
-        as: "workflow_step",
+        as: "step",
         attributes: ["step_id", "name", "step_order"]
       },
       {
