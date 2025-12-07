@@ -24,6 +24,6 @@ export const Group = sequelize.define("Group", {
     defaultValue: DataTypes.NOW
   }
 }, {
-  tableName: "user_groups",
+  tableName: "groups",
   timestamps: false
 });
