@@ -12,6 +12,5 @@ GroupRouter.post("/add-member", authenticateJWT, addMemberToGroup);
 
 GroupRouter.get("/:group_id/member", authenticateJWT, getMembersInGroup);
 
-
 GroupRouter.delete("/:group_id", authenticateJWT, removeGroup);
 export default GroupRouter;

@@ -139,7 +139,7 @@ export async function getMembersInGroupService(group_id) {
         attributes: ["user_id", "username", "email"]
       }
     ],
-    attributes: ["role", "created_at"] // created_at = ngày join group
+    attributes: ["role", "joined_at"] // created_at = ngày join group
   });
 
   return {
