@@ -21,10 +21,6 @@ export async function createMilestoneService({ project_id, name, description, st
         start_date,
         due_date
     });
-    /*const admins = await User.findAll({ where: { role: "Admin" } });
-    for (const admin of admins) {
-        await NotificationHook.projectUpdated(project, [admin]); 
-    }*/
 
     return milestone;
 }
@@ -62,14 +58,6 @@ export async function updateMilestoneService(milestone_id, updates) {
     }
 
     await milestone.update(updates);
-    /*const admins = await User.findAll({ where: { role: "Admin" } });
-    for (const admin of admins) {
-        await NotificationHook.projectUpdated(
-            { project_id: milestone.project_id, name: milestone.name },
-            [admin]
-        );
-    }*/
-
     return milestone;
 }
 
@@ -86,11 +74,6 @@ export async function completeMilestoneService(milestone_id) {
     milestone.is_completed = true;
     milestone.completed_at = new Date();
     await milestone.save();
-    /*const admins = await User.findAll({ where: { role: "Admin" } });
-
-    for (const admin of admins) {
-        await NotificationHook.milestoneCompleted(milestone, { username: "User" }, [admin]);
-    }*/
 
     return {
         message: "Đánh dấu milestone hoàn thành thành công",
@@ -106,14 +89,5 @@ export async function deleteMilestoneService(milestone_id) {
     }
 
     await Milestone.destroy({ where: { milestone_id } });
-    //const admins = await User.findAll({ where: { role: "Admin" } });
-
-   /* for (const admin of admins) {
-        await NotificationHook.projectUpdated(
-            { project_id: milestone.project_id, name: milestone.name },
-            [admin]
-        );
-    }*/
-
     return { message: "Xóa milestone thành công" };
 }
