@@ -39,7 +39,7 @@ export async function getGroupByUserService(user_id) {
       },
       {
         model: GroupMember,
-        as: 'members',
+        as: 'groupMembers',
         include: [
           {
             model: User,
