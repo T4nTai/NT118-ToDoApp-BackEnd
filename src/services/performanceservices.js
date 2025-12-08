@@ -38,14 +38,6 @@ export async function evaluateMemberInGroupService({ group_id, user_id, score, c
         comment,
         created_by
     });
-    await NotificationHook.performanceEvaluated({
-        target_user_id: user_id,
-        created_by,
-        scope: "group",
-        scope_id: group_id,
-        score,
-        comment
-    });
 
     return record;
 }
@@ -85,14 +77,6 @@ export async function evaluateMemberInProjectService({ project_id, user_id, scor
         score,
         comment,
         created_by
-    });
-    await NotificationHook.performanceEvaluated({
-        target_user_id: user_id,
-        created_by,
-        scope: "project",
-        scope_id: project_id,
-        score,
-        comment
     });
 
     return record;

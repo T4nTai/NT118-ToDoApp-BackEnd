@@ -72,10 +72,7 @@ export async function createTaskService({ title, description, project_id, milest
         due_date: due_date || null,
         step_id,
     });
-   /* const admins = await User.findAll({ where: { role: "Admin" } });
-    for (const admin of admins) {
-    await NotificationHook.taskCreatedByUser(task, created_by, admin);
-    }*/
+
     return task;
   }
 
@@ -223,7 +220,6 @@ export async function assignTaskService(task_id, user_id) {
     task.assigned_to = user_id;
     await task.save();
     const targetUser = await User.findByPk(user_id);
-    //await NotificationHook.taskAssigned(task, targetUser);
     return {
         message: "Giao task thành công",
         task,
@@ -247,8 +243,6 @@ export async function updateTaskService(task_id, updateData) {
         "completed_at"
     ];
     const validUpdates = {};
-   // let isStatusChanged = false;
-   // let isCompleted = false; 
     for (const key of Object.keys(updateData)) {
         if (allowedFields.includes(key)) {
             validUpdates[key] = updateData[key];
@@ -262,12 +256,6 @@ export async function updateTaskService(task_id, updateData) {
     }
     Object.assign(task, validUpdates);
     await task.save();
-   /*  if (isAssignChanged) {
-        const newUser = await User.findByPk(validUpdates.assigned_to);
-        if (newUser) {
-            await NotificationHook.taskAssigned(task, newUser);
-        }
-    }*/
     return task;
 }
 
