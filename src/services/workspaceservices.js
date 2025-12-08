@@ -25,8 +25,6 @@ export async function createWorkSpaceService({ name, description, owner_id }) {
         workspace_role: "Owner" 
     });
 
-    await NotificationHook.workspaceCreated(workspace, owner_id);
-
     return workspace;
 }
 
@@ -49,12 +47,6 @@ export async function joinWorkspaceByTokenService(user_id, token) {
         user_id,
         workspace_role: "Member"
     });
-    await NotificationHook.workspaceJoined(user_id, workspace);
-    return {
-        message: "Tham gia workspace thành công",
-        workspace,
-        member
-    };
 }
 
 
@@ -119,7 +111,6 @@ export async function addWorkspaceMemberService(workspace_id, email, workspace_r
         user_id,
         workspace_role
     });
-    await NotificationHook.workspaceJoined(user_id, workspace);
     return workspaceMember;
 }
 
@@ -151,11 +142,6 @@ export async function updateWorkspaceMemberRoleService(workspace_id, user_id, ne
     }
     member.workspace_role = newRole;
     await member.save();
-    await NotificationHook.workspaceRoleUpdated({
-        target_user_id: user_id,
-        workspace_id,
-        newRole
-    });
     return { message: "Cập nhật role thành công", member };
 }
 
@@ -166,10 +152,6 @@ export async function leaveWorkspaceService(workspace_id, user_id) {
         throw { status: 403, message: "Owner không thể tự rời workspace" };
     }
     await WorkspaceMember.destroy({ where: { workspace_id, user_id } });
-    await NotificationHook.workspaceMemberLeft({
-        target_user_id: user_id,
-        workspace_id
-    });
     return { message: "Rời workspace thành công" };
 }
 
@@ -184,10 +166,6 @@ export async function removeWorkspaceMemberService(workspace_id, user_id) {
     }
 
     await WorkspaceMember.destroy({ where: { workspace_id, user_id } });
-    await NotificationHook.workspaceMemberLeft({
-        target_user_id: user_id,
-        workspace_id
-    });
     return { message: "Xóa thành viên thành công" };
 }
 export async function deleteWorkspaceService(workspace_id) {
