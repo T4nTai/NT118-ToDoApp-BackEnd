@@ -2,28 +2,19 @@ import { NotificationService } from "../services/notificationservices.js";
 import { io } from "../socket.js";
 import { User } from "../models/auth.model.js";
 
-/**
- * emitToUser → Gửi realtime tới user bằng room user_{id}
- */
+
 function emitToUser(user_id, notif) {
     io.to(`user_${user_id}`).emit("notification", notif);
 }
 
-/**
- * emitToUsers → Gửi tới nhiều user (group, admins, project members…)
- */
+
 function emitToUsers(userIds, notif) {
     userIds.forEach(id => io.to(`user_${id}`).emit("notification", notif));
 }
 
     export const NotificationHook = {
-
-        // ============================================================
-        // 🟦 WORKSPACE EVENTS
-        // ============================================================
-
         async workspaceCreated(workspace, owner_id) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id: owner_id,
             type: "workspace_created",
             title: "Workspace được tạo thành công",
@@ -31,12 +22,11 @@ function emitToUsers(userIds, notif) {
             context_type: "workspace",
             context_id: workspace.workspace_id
         });
-
         emitToUser(owner_id, notif);
     },
 
     async workspaceJoined(user_id, workspace) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id,
             type: "workspace_joined",
             title: "Tham gia Workspace thành công",
@@ -49,7 +39,7 @@ function emitToUsers(userIds, notif) {
     },
 
     async workspaceRoleUpdated({ target_user_id, workspace_id, newRole }) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id: target_user_id,
             type: "workspace_role_updated",
             title: "Quyền hạn trong Workspace thay đổi",
@@ -62,7 +52,7 @@ function emitToUsers(userIds, notif) {
     },
 
     async workspaceMemberLeft({ target_user_id, workspace_id }) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id: target_user_id,
             type: "workspace_left",
             title: "Bạn đã rời Workspace",
@@ -75,7 +65,7 @@ function emitToUsers(userIds, notif) {
     },
 
     async workspaceDeleted(workspace_id, userIds) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id: null,  // gửi cho nhiều người → không gắn cụ thể
             type: "workspace_deleted",
             title: "Workspace đã bị xóa",
@@ -91,7 +81,7 @@ function emitToUsers(userIds, notif) {
     // ============================================================
 
     async groupMemberAdded(user, group) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id: user.user_id,
             type: "group_invite",
             title: "Bạn được thêm vào Group",
@@ -103,7 +93,7 @@ function emitToUsers(userIds, notif) {
     },
 
     async groupMemberRemoved(user, group) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id: user.user_id,
             type: "group_removed",
             title: "Bạn đã bị xóa khỏi Group",
@@ -119,7 +109,7 @@ function emitToUsers(userIds, notif) {
     // ============================================================
 
     async projectAssignedToUser(project, user) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id: user.user_id,
             type: "project_assigned",
             title: "Bạn được giao một Project",
@@ -132,7 +122,7 @@ function emitToUsers(userIds, notif) {
 
     async projectAssignedToGroup(project, groupMembers) {
         for (const member of groupMembers) {
-            const notif = await NotificationService.create({
+            const notif = await NotificationService.createNotification({
                 user_id: member.user_id,
                 type: "project_assigned",
                 title: "Group được giao Project",
@@ -146,7 +136,7 @@ function emitToUsers(userIds, notif) {
 
     async projectCompleted(project, admins) {
         for (const admin of admins) {
-            const notif = await NotificationService.create({
+            const notif = await NotificationService.createNotification({
                 user_id: admin.user_id,
                 type: "project_completed",
                 title: "Project hoàn thành",
@@ -160,7 +150,7 @@ function emitToUsers(userIds, notif) {
 
     async projectUpdated(project, admins) {
         for (const admin of admins) {
-            const notif = await NotificationService.create({
+            const notif = await NotificationService.createNotification({
                 user_id: admin.user_id,
                 type: "project_updated",
                 title: "Project được cập nhật",
@@ -177,7 +167,7 @@ function emitToUsers(userIds, notif) {
     // ============================================================
 
     async taskAssigned(task, user) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id: user.user_id,
             type: "task_assigned",
             title: "Task mới được giao",
@@ -190,7 +180,7 @@ function emitToUsers(userIds, notif) {
 
     async taskCreatedByUser(task, creatorUser, admins) {
         for (const admin of admins) {
-            const notif = await NotificationService.create({
+            const notif = await NotificationService.createNotification({
                 user_id: admin.user_id,
                 type: "task_created",
                 title: "Task mới được tạo",
@@ -204,7 +194,7 @@ function emitToUsers(userIds, notif) {
 
     async taskUpdatedStatus(task, newStatus, admins) {
         for (const admin of admins) {
-            const notif = await NotificationService.create({
+            const notif = await NotificationService.createNotification({
                 user_id: admin.user_id,
                 type: "task_status_changed",
                 title: "Task cập nhật trạng thái",
@@ -218,7 +208,7 @@ function emitToUsers(userIds, notif) {
 
     async taskCompleted(task, user, admins) {
         for (const admin of admins) {
-            const notif = await NotificationService.create({
+            const notif = await NotificationService.createNotification({
                 user_id: admin.user_id,
                 type: "task_completed",
                 title: "Task hoàn thành",
@@ -232,7 +222,7 @@ function emitToUsers(userIds, notif) {
 
     async taskDeleted(task, admins) {
         for (const admin of admins) {
-            const notif = await NotificationService.create({
+            const notif = await NotificationService.createNotification({
                 user_id: admin.user_id,
                 type: "task_deleted",
                 title: "Task đã bị xóa",
@@ -245,7 +235,7 @@ function emitToUsers(userIds, notif) {
     },
 
     async taskCommented(task, commenter, assignedUser) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id: assignedUser.user_id,
             type: "task_comment",
             title: "Bình luận mới trên Task",
@@ -262,7 +252,7 @@ function emitToUsers(userIds, notif) {
 
     async milestoneCompleted(milestone, user, admins) {
         for (const admin of admins) {
-            const notif = await NotificationService.create({
+            const notif = await NotificationService.createNotification({
                 user_id: admin.user_id,
                 type: "milestone_completed",
                 title: "Milestone hoàn thành",
@@ -276,7 +266,7 @@ function emitToUsers(userIds, notif) {
 
     async milestoneDueSoon(milestone, users) {
         for (const u of users) {
-            const notif = await NotificationService.create({
+            const notif = await NotificationService.createNotification({
                 user_id: u.user_id,
                 type: "milestone_due_soon",
                 title: "Milestone sắp đến hạn",
@@ -293,7 +283,7 @@ function emitToUsers(userIds, notif) {
     // ============================================================
 
     async performanceRatedUser(user, score, comment) {
-        const notif = await NotificationService.create({
+        const notif = await NotificationService.createNotification({
             user_id: user.user_id,
             type: "performance_review",
             title: "Bạn được đánh giá hiệu suất",
@@ -306,7 +296,7 @@ function emitToUsers(userIds, notif) {
 
     async performanceRatedGroup(groupMembers, score) {
         for (const u of groupMembers) {
-            const notif = await NotificationService.create({
+            const notif = await NotificationService.createNotification({
                 user_id: u.user_id,
                 type: "performance_review",
                 title: "Nhóm của bạn được đánh giá",

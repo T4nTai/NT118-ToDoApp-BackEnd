@@ -20,8 +20,6 @@ export async function createGroupService({ group_name, description, owner_id, wo
     user_id: owner_id,
     role: "Owner"
   });
-  //await NotificationHook.groupMemberAdded(owner, group);
-
   return group;
 }
 
@@ -79,7 +77,7 @@ export async function addMemberToGroupService({ group_id, user_id, role }) {
     user_id,
     role: role || "Member"
   });
-  //await NotificationHook.groupMemberAdded(user, group);
+  await NotificationHook.groupMemberAdded(user, group);
   return { message: "Thêm thành viên vào nhóm thành công" };
 }
 
@@ -99,7 +97,7 @@ export async function removeMemberFromGroupService(group_id, user_id) {
   await GroupMember.destroy({
     where: { group_id, user_id }
   });
-  //await NotificationHook.groupMemberRemoved(user, group);
+  await NotificationHook.groupMemberRemoved(user, group);
 
   return { message: "Xóa thành viên khỏi group thành công" };
 }
@@ -113,23 +111,22 @@ export async function removeGroupService(group_id) {
   const members = await GroupMember.findAll({ where: { group_id } });
   await GroupMember.destroy({ where: { group_id } });
   await group.destroy();
-  /*for (const m of members) {
+   for (const m of members) {
     const user = await User.findByPk(m.user_id);
-    await NotificationHook.groupMemberRemoved(user, group);
-  }*/
-
+   if (user) {
+      await NotificationHook.groupMemberRemoved(user, group);
+    }
+  }
   return { message: "Xóa nhóm thành công" };
 }
 
 
 export async function getMembersInGroupService(group_id) {
-  // 1. Kiểm tra group tồn tại
+
   const group = await Group.findByPk(group_id);
   if (!group) {
     throw { status: 404, message: "Group không tồn tại" };
   }
-
-  // 2. Lấy danh sách thành viên
   const members = await GroupMember.findAll({
     where: { group_id },
     include: [
@@ -139,7 +136,7 @@ export async function getMembersInGroupService(group_id) {
         attributes: ["user_id", "username", "email"]
       }
     ],
-    attributes: ["role", "joined_at"] // created_at = ngày join group
+    attributes: ["role", "joined_at"]
   });
 
   return {

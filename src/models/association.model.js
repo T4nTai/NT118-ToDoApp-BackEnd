@@ -245,11 +245,4 @@ export default function initAssociations() {
     foreignKey: "assigned_group_id",
     as: "assignedGroup"
   });
-
-  Project.belongsTo(User, {
-    foreignKey: "assigned_user_id",
-    as: "assignedUser"
-  });
-
-
 }
