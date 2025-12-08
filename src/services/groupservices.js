@@ -32,7 +32,7 @@ export async function getGroupByUserService(user_id) {
     include: [
       {
         model: GroupMember,
-        as: 'membership',
+        as: 'groupMembers',
         where: { user_id },
         attributes: [],
         required: true
