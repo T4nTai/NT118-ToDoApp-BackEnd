@@ -151,7 +151,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## 📬 Contact
 
-[Your Name] - [Your Email]
+[Võ Tấn Tài] - [taivophat1509@gmail.com]
 
 ## 💖 Thanks Message
 
