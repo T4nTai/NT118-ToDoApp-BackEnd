@@ -1,19 +1,18 @@
 import { ProjectMember } from "../models/project_member.model.js";
-import { Project } from "../models/project.model.js";
 
 export function requireProjectRole(requiredRole) {
   return async function (req, res, next) {
     try {
       const user_id = req.user.id;
-      const { project_id } = req.body; 
-       
-      if (!project_id) {
-        return next();
-      }
 
-      const project = await Project.findByPk(project_id);
-      if (!project) {
-        return res.status(404).json({ message: "Project không tồn tại" });
+      // lấy project_id từ body, params, hoặc query
+      const project_id = 
+        req.body.project_id ||
+        req.params.project_id ||
+        req.query.project_id;
+
+      if (!project_id) {
+        return res.status(400).json({ message: "Thiếu project_id" });
       }
 
       const member = await ProjectMember.findOne({
@@ -24,11 +23,15 @@ export function requireProjectRole(requiredRole) {
         return res.status(403).json({ message: "Bạn không thuộc project này" });
       }
 
-      if (member.project_role !== requiredRole) {
+      // Cho phép Owner override tất cả
+      const userRole = member.role;
+
+      if (userRole !== requiredRole && userRole !== "Owner") {
         return res.status(403).json({
-          message: `Bạn không có quyền ${requiredRole} để thực hiện hành động này`
+          message: `Bạn cần quyền ${requiredRole} để thực hiện hành động này`
         });
       }
+
       next();
     } catch (err) {
       next(err);
