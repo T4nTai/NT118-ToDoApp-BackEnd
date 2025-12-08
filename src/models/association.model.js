@@ -241,4 +241,15 @@ export default function initAssociations() {
   RefreshToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
   User.hasMany(RefreshToken, { foreignKey: "user_id", as: "refreshTokens" });
 
+  Project.belongsTo(Group, {
+    foreignKey: "assigned_group_id",
+    as: "assignedGroup"
+  });
+
+  Project.belongsTo(User, {
+    foreignKey: "assigned_user_id",
+    as: "assignedUser"
+  });
+
+
 }

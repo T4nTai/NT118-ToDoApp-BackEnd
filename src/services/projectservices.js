@@ -121,17 +121,30 @@ export async function getProjectsByOwnerService(owner_id) {
         include: [{
             model: Project,
             as: 'ownedProjects',
-            include: [{
-                model: User,
-                as: 'members',
-                attributes: ['user_id', 'username', 'email'],
-                through: { attributes: ['role'] }
-            }]
+            include: [
+                {
+                    model: User,
+                    as: 'members',
+                    attributes: ['user_id', 'username', 'email'],
+                    through: { attributes: ['role'] }
+                },
+                {
+                    model: Group,
+                    as: "assignedGroup",
+                    attributes: ["group_id", "name", "description"]
+                },
+                {
+                    model: User,
+                    as: "assignedUser",
+                    attributes: ["user_id", "username", "email"]
+                }
+            ]
         }]
     });
 
     return user ? user.ownedProjects : [];
 }
+
 export async function updateProjectService(project_id, owner_id, updates) {
     const project = await Project.findByPk(project_id);
 
