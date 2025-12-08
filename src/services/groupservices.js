@@ -120,3 +120,32 @@ export async function removeGroupService(group_id) {
 
   return { message: "Xóa nhóm thành công" };
 }
+
+
+export async function getMembersInGroupService(group_id) {
+  // 1. Kiểm tra group tồn tại
+  const group = await Group.findByPk(group_id);
+  if (!group) {
+    throw { status: 404, message: "Group không tồn tại" };
+  }
+
+  // 2. Lấy danh sách thành viên
+  const members = await GroupMember.findAll({
+    where: { group_id },
+    include: [
+      {
+        model: User,
+        as: "user",
+        attributes: ["user_id", "username", "email"]
+      }
+    ],
+    attributes: ["role", "created_at"] // created_at = ngày join group
+  });
+
+  return {
+    group_id,
+    group_name: group.name,
+    total_members: members.length,
+    members
+  };
+}
