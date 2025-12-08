@@ -154,6 +154,7 @@ export async function updateProjectService(project_id, owner_id, updates) {
     if (project.owner_id !== owner_id) {
         throw { status: 403, message: "Bạn không có quyền sửa dự án này" };
     }
+
     const allowedFields = [
         "name",
         "description",
@@ -171,22 +172,48 @@ export async function updateProjectService(project_id, owner_id, updates) {
             dataToUpdate[key] = updates[key];
         }
     }
+
     if (dataToUpdate.start_date && dataToUpdate.due_date) {
         if (new Date(dataToUpdate.start_date) > new Date(dataToUpdate.due_date)) {
             throw { status: 400, message: "start_date không thể sau due_date" };
         }
     }
 
+    const oldStatus = project.status;
+
     await project.update(dataToUpdate);
+    const memberRows = await ProjectMember.findAll({
+        where: { project_id },
+        include: [{
+            model: User,
+            as: "user",
+            attributes: ["user_id", "username", "email"]
+        }]
+    });
+    let admins = memberRows
+        .filter(m => m.role === "Admin" || m.role === "Owner" || m.project_role === "Admin" || m.project_role === "Owner")
+        .map(m => m.user);
+    if (admins.length === 0) {
+        const owner = await User.findByPk(project.owner_id, {
+            attributes: ["user_id", "username", "email"]
+        });
+        if (owner) admins.push(owner);
+    }
+    if (admins.length > 0) {
+        await NotificationHook.projectUpdated(project, admins);
+        if (oldStatus !== "Completed" && project.status === "Completed") {
+            await NotificationHook.projectCompleted(project, admins);
+        }
+    }
     return project;
 }
+
 
 export async function assignProjectToGroupService(
     project_id,
     group_id,
     inviter_id,
-    role = "Member" 
-) {
+    role = "Member" ) {
     const project = await Project.findByPk(project_id);
     if (!project) throw { status: 404, message: "Dự án không tồn tại" };
 
@@ -205,7 +232,7 @@ export async function assignProjectToGroupService(
     });
 
     for (const gm of groupMembers) {
-        const user = gm.member;
+        const user = gm.user;
 
         const exists = await ProjectMember.findOne({
             where: { project_id, user_id: user.user_id }
@@ -224,8 +251,14 @@ export async function assignProjectToGroupService(
             }
         }
     }
+    const recipients = groupMembers.map(gm => ({
+        user_id: gm.user_id
+    }));
+    await NotificationHook.projectAssignedToGroup(project, recipients);
+
     return project;
 }
+
 
 
 export async function assignProjectToUserService(project_id, user_id, inviter_id, role = "Member") {
@@ -234,7 +267,6 @@ export async function assignProjectToUserService(project_id, user_id, inviter_id
 
     const user = await User.findByPk(user_id);
     if (!user) throw { status: 404, message: "Người dùng không tồn tại" };
-
     const inviter = await User.findByPk(inviter_id);
     project.assigned_user_id = user_id;
     project.assigned_group_id = null;
@@ -251,8 +283,10 @@ export async function assignProjectToUserService(project_id, user_id, inviter_id
             role
         });
     }
+    await NotificationHook.projectAssignedToUser(project, user);
     return project;
 }
+
 
 export async function addMemberToProjectService({ project_id, email, role = "Member", inviter_id }) {
 

@@ -29,8 +29,6 @@ export async function joinWorkspace(req, res, next) {
 export async function getGroupsByWorkspace(req, res, next) {
     try {
         let workspace_id = req.params.workspace_id;
-
-        // Nếu params là object → extract ra số
         if (typeof workspace_id === "object") {
             if ("workspace_id" in workspace_id) {
                 workspace_id = workspace_id.workspace_id;

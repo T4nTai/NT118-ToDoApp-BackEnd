@@ -1,23 +1,39 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "./config/env.js";
 
 let io = null;
 
 export function initSocket(server) {
   io = new Server(server, {
     cors: {
-      origin: ["http://localhost:5173"], // FE react
+      origin: ["http://localhost:5173"],
       methods: ["GET", "POST"]
     }
   });
 
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+
+    if (!token) return next(new Error("NO_TOKEN"));
+
+    try {
+      const user = jwt.verify(token, JWT_SECRET);
+      socket.user_id = user.id;
+      return next();
+    } catch (err) {
+      return next(new Error("INVALID_TOKEN"));
+    }
+  });
+
   io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
-    socket.on("join_room", (roomName) => {
-      socket.join(roomName);
-      console.log("User joined room:", roomName);
-    });
+    const user_id = socket.user_id;
+
+    socket.join(`user_${user_id}`);
+    console.log(`User ${user_id} connected via socket`);
+
     socket.on("disconnect", () => {
-      console.log("User disconnected:", socket.id);
+      console.log(`User ${user_id} disconnected`);
     });
   });
 
