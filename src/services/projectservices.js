@@ -188,7 +188,7 @@ export async function assignProjectToGroupService(
 
     const groupMembers = await GroupMember.findAll({
         where: { group_id },
-        include: [{ model: User, as: "member" }]
+        include: [{ model: User, as: "user" }]
     });
 
     for (const gm of groupMembers) {
