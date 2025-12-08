@@ -1,24 +1,27 @@
-import { internalApi } from "../../config/internalApi.js";
-import { GROUP_SERVICE_URL } from "../../config/env.js";
+import { groupInternalApi } from "../config/internalAPI.js";
 
-export async function checkGroupExists(group_id) {
+export async function ensureGroupExists(group_id) {
   try {
-    const res = await internalApi.get(
-      `${GROUP_SERVICE_URL}/internal/group/${group_id}/exists`
-    );
-    return res.data.exists;
-  } catch {
-    throw { status: 503, message: "Group service unavailable" };
+    const res = await groupInternalApi.get(`/internal/group/${group_id}/exists`);
+    return res.data;
+  } catch (err) {
+    if (err.response?.status === 404) {
+      throw { status: 404, message: "Group không tồn tại" };
+    }
+    throw { status: 500, message: "Lỗi gọi group-service" };
   }
 }
 
 export async function getGroupMembers(group_id) {
-  const res = await internalApi.get(
-    `${GROUP_SERVICE_URL}/internal/group/${group_id}/members`,
-    {
-      headers: { "x-internal-token": INTERNAL_SECRET }
+  try {
+    const res = await internalApi.get(
+      `/internal/group/${group_id}/members`
+    );
+    return res.data.members || [];
+  } catch (err) {
+    if (err.response?.status === 404) {
+      throw { status: 404, message: "Group không tồn tại" };
     }
-  );
-
-  return res.data.members; 
+    throw { status: 500, message: "Lỗi gọi group-service" };
+  }
 }

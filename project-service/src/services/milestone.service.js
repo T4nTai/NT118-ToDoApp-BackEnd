@@ -1,51 +1,80 @@
-import { Milestone } from "../models/milestone.model.js";
-import { checkProjectMember } from "../helper/project.helper.js";
+import { Milestone } from "../models/index.js";
+import { checkProjectExistsService } from "../services/project.service.js";
 
-export class MilestoneService {
+export async function createMilestoneService(data) {
+  const { project_id, name, description, start_date, due_date } = data;
 
-  static async create({ project_id, name, description, due_date, requester_id }) {
-    await checkProjectMember(project_id, requester_id);
-
-    return await Milestone.create({
-      project_id,
-      name,
-      description,
-      due_date,
-      is_completed: false
-    });
+  if (!project_id || !name) {
+    throw { status: 400, message: "Thiếu project_id hoặc name" };
   }
 
-  static async list(project_id, requester_id) {
-    await checkProjectMember(project_id, requester_id);
-    return await Milestone.findAll({ where: { project_id } });
+  await checkProjectExistsService(project_id);
+
+  const milestone = await Milestone.create({
+    project_id,
+    name,
+    description: description || null,
+    start_date: start_date || null,
+    due_date: due_date || null,
+    is_completed: false,
+    completed_at: null,
+  });
+
+  return milestone;
+}
+
+export async function getMilestonesByProjectService(project_id) {
+  await checkProjectExistsService(project_id);
+  const milestones = await Milestone.findAll({
+    where: { project_id },
+  });
+  return milestones;
+}
+
+export async function getMilestoneDetailService(milestone_id) {
+  const milestone = await Milestone.findByPk(milestone_id);
+  if (!milestone) {
+    throw { status: 404, message: "Milestone không tồn tại" };
+  }
+  return milestone;
+}
+
+export async function updateMilestoneService(milestone_id, updates) {
+  const milestone = await Milestone.findByPk(milestone_id);
+  if (!milestone) {
+    throw { status: 404, message: "Milestone không tồn tại" };
   }
 
-  static async detail(milestone_id, requester_id) {
-    const mile = await Milestone.findByPk(milestone_id);
-    if (!mile) throw { status: 404, message: "Milestone not found" };
-
-    await checkProjectMember(mile.project_id, requester_id);
-
-    return mile;
+  const allowed = ["name", "description", "start_date", "due_date"];
+  for (const key of allowed) {
+    if (updates[key] !== undefined) {
+      milestone[key] = updates[key];
+    }
   }
 
-  static async update({ milestone_id, requester_id, ...data }) {
-    const mile = await Milestone.findByPk(milestone_id);
-    if (!mile) throw { status: 404, message: "Milestone not found" };
+  await milestone.save();
+  return milestone;
+}
 
-    await checkProjectMember(mile.project_id, requester_id);
-
-    await Milestone.update(data, { where: { milestone_id } });
-    return await Milestone.findByPk(milestone_id);
+export async function completeMilestoneService(milestone_id) {
+  const milestone = await Milestone.findByPk(milestone_id);
+  if (!milestone) {
+    throw { status: 404, message: "Milestone không tồn tại" };
   }
 
-  static async delete({ milestone_id, requester_id }) {
-    const mile = await Milestone.findByPk(milestone_id);
-    if (!mile) throw { status: 404, message: "Milestone not found" };
+  milestone.is_completed = true;
+  milestone.completed_at = new Date();
+  await milestone.save();
 
-    await checkProjectMember(mile.project_id, requester_id);
+  return { message: "Hoàn thành milestone thành công" };
+}
 
-    await Milestone.destroy({ where: { milestone_id } });
-    return true;
+export async function deleteMilestoneService(milestone_id) {
+  const milestone = await Milestone.findByPk(milestone_id);
+  if (!milestone) {
+    throw { status: 404, message: "Milestone không tồn tại" };
   }
+
+  await milestone.destroy();
+  return { message: "Xoá milestone thành công" };
 }

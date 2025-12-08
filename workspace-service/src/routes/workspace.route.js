@@ -1,11 +1,17 @@
 import { Router } from "express";
-import { WorkspaceController } from "../controllers/workspace.controller.js";
+import { authenticateFromGateway } from "../middleware/auth.gateway.middleware.js";
+import {
+  createWorkspace,
+  getMyWorkspaces,
+  getWorkspaceDetail
+} from "../controllers/workspace.controller.js";
 
 const WorkspaceRouter = Router();
 
-WorkspaceRouter.post("/", WorkspaceController.create);
-WorkspaceRouter.get("/", WorkspaceController.myWorkspaces);
-WorkspaceRouter.get("/:id", WorkspaceController.detail);
-WorkspaceRouter.delete("/:id", WorkspaceController.delete);
+WorkspaceRouter.use(authenticateFromGateway);
+
+WorkspaceRouter.post("/", createWorkspace);
+WorkspaceRouter.get("/", getMyWorkspaces);
+WorkspaceRouter.get("/:workspace_id", getWorkspaceDetail);
 
 export default WorkspaceRouter;

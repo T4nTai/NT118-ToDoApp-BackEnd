@@ -18,8 +18,13 @@ export const Workspace = sequelize.define(
       allowNull: false,
       unique: true
     },
-    description: DataTypes.TEXT
+    description: DataTypes.TEXT,
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
   },
+  
   {
     tableName: "workspaces",
     timestamps: true,

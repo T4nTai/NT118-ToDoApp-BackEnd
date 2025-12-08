@@ -1,15 +1,27 @@
-import { MilestoneService } from "../services/milestone.service.js";
+import {
+  createMilestoneService,
+  getMilestonesByProjectService,
+  getMilestoneDetailService,
+  updateMilestoneService,
+  completeMilestoneService,
+  deleteMilestoneService,
+} from "../services/milestone.service.js";
 
 export class MilestoneController {
-
   static async create(req, res) {
     try {
-      const milestone = await MilestoneService.create({
-        project_id: req.params.project_id,
-        requester_id: Number(req.headers["x-user-id"]),
-        ...req.body
+      const { project_id } = req.params;
+      const { name, description, start_date, due_date } = req.body;
+
+      const milestone = await createMilestoneService({
+        project_id,
+        name,
+        description,
+        start_date,
+        due_date,
       });
-      res.json(milestone);
+
+      res.status(201).json(milestone);
     } catch (err) {
       res.status(err.status || 500).json({ message: err.message });
     }
@@ -17,10 +29,9 @@ export class MilestoneController {
 
   static async list(req, res) {
     try {
-      const data = await MilestoneService.list(
-        req.params.project_id,
-        Number(req.headers["x-user-id"])
-      );
+      const { project_id } = req.params;
+
+      const data = await getMilestonesByProjectService(project_id);
       res.json(data);
     } catch (err) {
       res.status(err.status || 500).json({ message: err.message });
@@ -29,10 +40,9 @@ export class MilestoneController {
 
   static async detail(req, res) {
     try {
-      const detail = await MilestoneService.detail(
-        req.params.milestone_id,
-        Number(req.headers["x-user-id"])
-      );
+      const { milestone_id } = req.params;
+
+      const detail = await getMilestoneDetailService(milestone_id);
       res.json(detail);
     } catch (err) {
       res.status(err.status || 500).json({ message: err.message });
@@ -41,12 +51,22 @@ export class MilestoneController {
 
   static async update(req, res) {
     try {
-      const updated = await MilestoneService.update({
-        milestone_id: req.params.milestone_id,
-        requester_id: Number(req.headers["x-user-id"]),
-        ...req.body
-      });
+      const { milestone_id } = req.params;
+      const updates = req.body;
+
+      const updated = await updateMilestoneService(milestone_id, updates);
       res.json(updated);
+    } catch (err) {
+      res.status(err.status || 500).json({ message: err.message });
+    }
+  }
+
+  static async complete(req, res) {
+    try {
+      const { milestone_id } = req.params;
+
+      const result = await completeMilestoneService(milestone_id);
+      res.json(result);
     } catch (err) {
       res.status(err.status || 500).json({ message: err.message });
     }
@@ -54,11 +74,10 @@ export class MilestoneController {
 
   static async delete(req, res) {
     try {
-      await MilestoneService.delete({
-        milestone_id: req.params.milestone_id,
-        requester_id: Number(req.headers["x-user-id"])
-      });
-      res.json({ message: "Milestone deleted" });
+      const { milestone_id } = req.params;
+
+      const result = await deleteMilestoneService(milestone_id);
+      res.json(result);
     } catch (err) {
       res.status(err.status || 500).json({ message: err.message });
     }

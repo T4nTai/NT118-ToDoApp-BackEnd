@@ -5,6 +5,7 @@ import { sequelize } from "./config/db.js";
 import initModels from "./models/index.js";
 import authRoutes from "./routes/auth.route.js";
 import internalRoutes from "./routes/internal.route.js";
+import GatewayRouter from "./routes/internal_gateway.route.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
@@ -25,6 +26,7 @@ app.use("/auth", authRoutes);
 
 app.use("/internal/auth", internalRoutes);
 
+app.use("/internal/gateway", GatewayRouter);
 
 app.use(errorHandler);
 

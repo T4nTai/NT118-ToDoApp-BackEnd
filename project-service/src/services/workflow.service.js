@@ -1,6 +1,6 @@
 import { Workflow } from "../models/workflow.model.js";
 import { WorkflowStep } from "../models/workflow_step.model.js";
-import { checkProjectMember } from "../helper/checkMember.js";
+import { checkProjectMember } from "../helper/project.helper.js";
 
 export class WorkflowService {
 

@@ -15,6 +15,10 @@ export const WorkspaceMember = sequelize.define(
     workspace_role: {
       type: DataTypes.ENUM("Owner", "Admin", "Member", "Viewer"),
       defaultValue: "Member"
+    },
+    joined_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
     }
   },
   {

@@ -1,6 +1,6 @@
 // src/models/group.model.js
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.js";
+import { sequelize } from "../config/db.js";
 
 export const Group = sequelize.define(
   "Group",

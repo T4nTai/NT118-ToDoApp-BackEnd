@@ -1,14 +1,25 @@
-import { config } from "dotenv";
-import path from "path";
+import dotenv from "dotenv";
+dotenv.config();
 
-config({
-  path: path.resolve(process.cwd(), `.env.auth.local`),  
-});
-
-export const PORT = process.env.PORT;
-export const DB_HOST = process.env.DB_HOST;
-export const DB_PORT = process.env.DB_PORT;
-export const DB_USER = process.env.DB_USER;
-export const DB_PASS = process.env.DB_PASS;
-export const DB_NAME = process.env.DB_NAME;
-export const JWT_SECRET = process.env.JWT_SECRET;
+export const {
+  NODE_ENV,
+  PORT,
+  DB_HOST,
+  DB_PORT,
+  DB_USER,
+  DB_PASS,
+  DB_NAME,
+  INTERNAL_API_BASE_URL,
+  INTERNAL_API_KEY,
+  AUTH_SERVICE_URL,
+  NODEMAILER_USER,
+  NODEMAILER_PASSWORD,
+  GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET,
+  GITHUB_REDIRECT_URI_DEV,
+  MOBILE_SCHEME,
+  FRONTEND_URL,
+  CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET,
+} = process.env;

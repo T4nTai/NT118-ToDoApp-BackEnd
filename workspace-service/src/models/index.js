@@ -1,7 +1,7 @@
 import { Workspace } from "./workspace.model.js";
 import { WorkspaceMember } from "./workspace_member.model.js";
 
-export default function initAssociations() {
+export default function initModels() {
 
     Workspace.hasMany(WorkspaceMember, {
         foreignKey: "workspace_id",
@@ -13,3 +13,6 @@ export default function initAssociations() {
         as: "workspace"
     });
 }
+
+export { Workspace, WorkspaceMember };
+

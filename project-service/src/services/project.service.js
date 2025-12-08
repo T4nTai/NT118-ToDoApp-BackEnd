@@ -1,211 +1,380 @@
-import { Project } from "../models/project.model.js";
-import { ProjectMember } from "../models/project_member.model.js";
-import { ProjectGroup } from "../models/project_group.model.js";
-import { Workflow } from "../models/workflow.model.js";
-import { WorkflowStep } from "../models/workflow_step.model.js";
-
-import { checkUserExists } from "../helper/auth.helper.js";
-import { checkWorkspaceExists } from "../helper/workspace.helper.js";
-import { checkGroupExists, getGroupMembers } from "../helper/group.helper.js";
-
 import {
-  checkProjectExists,
-  checkProjectMember,
-  canManageMembers
-} from "../helper/project.helper.js";
+  Project,
+  ProjectMember,
+  ProjectGroup,
+  Workflow,
+  WorkflowStep,
+} from "../models/index.js";
 
-export class ProjectService {
+import { ensureWorkspaceExists } from "../helper/workspace.helper.js";
+import {
+  ensureGroupExists,
+  getGroupMembers,
+} from "../helper/group.helper.js";
+import {
+  getUserById,
+  getUserIdByEmail,
+} from "../helper/auth.helper.js";
 
-  static async createProject(data) {
-    const { 
-      workspace_id,
-      name,
-      description,
-      status,
-      priority,
-      start_date,
-      due_date,
-      owner_id
-    } = data;
+import { utilityInternalApi } from "../config/internalAPI.js";
 
-    if (!name || !workspace_id || !owner_id)
-      throw { status: 400, message: "Missing name, workspace_id or owner_id" };
+async function getProjectOrThrow(project_id) {
+  const project = await Project.findByPk(project_id);
+  if (!project) throw { status: 404, message: "Dự án không tồn tại" };
+  return project;
+}
 
-    await checkWorkspaceExists(workspace_id);
-    await checkUserExists(owner_id);
+export async function createProjectService(data, file) {
+  const {
+    workspace_id,
+    name,
+    description,
+    status,
+    priority,
+    start_date,
+    due_date,
+    owner_id,
+    attachments,        
+  } = data;
 
-    if (start_date && due_date && new Date(start_date) > new Date(due_date))
-      throw { status: 400, message: "Ngày bắt đầu không thể sau ngày kết thúc" };
+  if (!workspace_id || !name || !owner_id) {
+    throw {
+      status: 400,
+      message: "Thiếu workspace_id, name hoặc owner_id",
+    };
+  }
 
-    const project = await Project.create({
-      workspace_id,
-      name,
-      description,
-      status,
-      priority,
-      start_date,
-      due_date,
-      owner_id
+  await ensureWorkspaceExists(workspace_id);
+
+  await getUserById(owner_id);
+
+  if (start_date && due_date && new Date(start_date) > new Date(due_date)) {
+    throw {
+      status: 400,
+      message: "Ngày bắt đầu không thể sau ngày kết thúc",
+    };
+  }
+
+  const project = await Project.create({
+    workspace_id,
+    name,
+    description: description || null,
+    status: status || "To Do",
+    priority: priority || "Medium",
+    start_date: start_date || null,
+    due_date: due_date || null,
+    owner_id,
+    assigned_group_id: null,
+    assigned_user_id: null,
+  });
+
+  const workflow = await Workflow.create({
+    project_id: project.project_id,
+    name: `${name} Workflow`,
+    description: null,
+  });
+
+  const defaultSteps = [
+    { name: "To Do", step_order: 1 },
+    { name: "In Progress", step_order: 2 },
+    { name: "Review", step_order: 3 },
+    { name: "Done", step_order: 4 },
+  ];
+
+  for (const step of defaultSteps) {
+    await WorkflowStep.create({
+      workflow_id: workflow.workflow_id,
+      name: step.name,
+      step_order: step.step_order,
     });
+  }
 
-    await ProjectMember.create({
-      project_id: project.project_id,
-      user_id: owner_id,
-      role: "Owner"
-    });
+  await ProjectMember.create({
+    project_id: project.project_id,
+    user_id: owner_id,
+    role: "Owner",
+  });
 
-    const workflow = await Workflow.create({
-      project_id: project.project_id,
-      name: `${name} Workflow`
-    });
-
-    const steps = [
-      { name: "To Do", step_order: 1 },
-      { name: "In Progress", step_order: 2 },
-      { name: "Review", step_order: 3 },
-      { name: "Done", step_order: 4 }
-    ];
-
-    for (const s of steps) {
-      await WorkflowStep.create({
-        workflow_id: workflow.workflow_id,
-        name: s.name,
-        step_order: s.step_order
-      });
+  if (Array.isArray(attachments) && attachments.length > 0) {
+    for (const att of attachments) {
+      try {
+        await utilityInternalApi.post("/internal/file", {
+          owner_user_id: owner_id,
+          provider: att.provider || "cloudinary",
+          public_id: att.public_id || null,
+          url: att.url,                          
+          resource_type: att.resource_type || "file",
+          context_type: "attachment",            
+          context_id: project.project_id,        
+        });
+      } catch (err) {
+        console.error(
+          "[project-service] Lỗi tạo attachment:",
+          err.response?.data || err.message || err
+        );
+      }
     }
-
-    return project;
   }
 
-  static async getProjectDetail(project_id) {
-    return await checkProjectExists(project_id);
-  }
+  return project;
+}
 
-  static async updateProject(project_id, requester_id, updates) {
+export async function getProjectMembersService(project_id) {
+  await getProjectOrThrow(project_id);
 
-    await checkProjectExists(project_id);
-    const requester = await checkProjectMember(project_id, requester_id);
+  const members = await ProjectMember.findAll({
+    where: { project_id },
+    order: [["joined_at", "ASC"]],
+  });
 
-    if (!canManageMembers(requester.role))
-      throw { status: 403, message: "Not allowed to update project" };
+  const result = [];
+  for (const m of members) {
+    let userInfo = null;
+    try {
+      userInfo = await getUserById(m.user_id);
+    } catch (err) {}
 
-    await Project.update(updates, { where: { project_id } });
-
-    return await Project.findByPk(project_id);
-  }
-
-  static async deleteProject({ project_id, requester_id }) {
-
-    const requester = await checkProjectMember(project_id, requester_id);
-
-    if (requester.role !== "Owner")
-      throw { status: 403, message: "Only Owner can delete project" };
-
-    await Project.destroy({ where: { project_id } });
-
-    return true;
-  }
-
-  static async addMember({ project_id, target_user_id, role, requester_id }) {
-
-    await checkProjectExists(project_id);
-    const requester = await checkProjectMember(project_id, requester_id);
-
-    if (!canManageMembers(requester.role))
-      throw { status: 403, message: "Not allowed to add members" };
-
-    await checkUserExists(target_user_id);
-
-    const exists = await ProjectMember.findOne({
-      where: { project_id, user_id: target_user_id }
-    });
-
-    if (exists)
-      throw { status: 400, message: "User already in project" };
-
-    return await ProjectMember.create({
-      project_id,
-      user_id: target_user_id,
-      role: role || "Contributor"
+    result.push({
+      user_id: m.user_id,
+      username: userInfo?.username || null,
+      email: userInfo?.email || null,
+      role: m.role,
+      joined_at: m.joined_at,
     });
   }
 
-  static async removeMember({ project_id, target_user_id, requester_id }) {
+  return result;
+}
 
-    const requester = await checkProjectMember(project_id, requester_id);
+export async function getProjectsByOwnerService(owner_id) {
+  await getUserById(owner_id);
 
-    if (requester.role !== "Owner")
-      throw { status: 403, message: "Only Owner can remove member" };
+  const projects = await Project.findAll({
+    where: { owner_id },
+  });
 
-    if (requester.user_id === Number(target_user_id))
-      throw { status: 400, message: "Owner cannot remove themselves" };
+  return projects;
+}
 
-    await ProjectMember.destroy({
-      where: { project_id, user_id: target_user_id }
-    });
+export async function updateProjectService(project_id, owner_id, updates) {
+  const project = await getProjectOrThrow(project_id);
 
-    return true;
+  if (project.owner_id !== owner_id) {
+    throw {
+      status: 403,
+      message: "Bạn không có quyền sửa dự án này",
+    };
   }
 
-  static async assignGroup({ project_id, group_id, requester_id, role = "Member" }) {
+  const allowedFields = [
+    "name",
+    "description",
+    "status",
+    "priority",
+    "start_date",
+    "due_date",
+    "assigned_user_id",
+    "assigned_group_id",
+  ];
 
-  const project = await checkProjectExists(project_id);
-  const requester = await checkProjectMember(project_id, requester_id);
+  const dataToUpdate = {};
+  for (const key of allowedFields) {
+    if (updates[key] !== undefined) {
+      dataToUpdate[key] = updates[key];
+    }
+  }
 
-  if (!canManageMembers(requester.role))
-    throw { status: 403, message: "Not allowed to assign group" };
+  if (dataToUpdate.start_date && dataToUpdate.due_date) {
+    if (new Date(dataToUpdate.start_date) > new Date(dataToUpdate.due_date)) {
+      throw {
+        status: 400,
+        message: "start_date không thể sau due_date",
+      };
+    }
+  }
+
+  await project.update(dataToUpdate);
+  return project;
+}
+
+export async function assignProjectToGroupService(
+  project_id,
+  group_id,
+  inviter_id,
+  role = "Contributor"
+) {
+  const project = await getProjectOrThrow(project_id);
+
+  await ensureGroupExists(group_id);
+
+  await getUserById(inviter_id);
 
   project.assigned_group_id = group_id;
   project.assigned_user_id = null;
   await project.save();
 
-  const members = await getGroupMembers(group_id);
+  const pg = await ProjectGroup.findOne({
+    where: { project_id, group_id },
+  });
+  if (!pg) {
+    await ProjectGroup.create({ project_id, group_id });
+  }
+  const groupMembers = await getGroupMembers(group_id);
 
-  for (const m of members) {
+  for (const gm of groupMembers) {
+    const user_id = gm.user_id;
+
     const exists = await ProjectMember.findOne({
-      where: { project_id, user_id: m.user_id }
+      where: { project_id, user_id },
     });
 
     if (!exists) {
       await ProjectMember.create({
         project_id,
-        user_id: m.user_id,
-        role
+        user_id,
+        role: role || "Contributor",
       });
-    } else if (exists.role !== role) {
-      exists.role = role;
-      await exists.save();
+    } else {
+      if (exists.role !== (role || "Contributor")) {
+        exists.role = role || "Contributor";
+        await exists.save();
+      }
     }
   }
 
   return project;
 }
 
+export async function assignProjectToUserService(
+  project_id,
+  user_id,
+  inviter_id,
+  role = "Contributor"
+) {
+  const project = await getProjectOrThrow(project_id);
 
-  static async assignToUser({ project_id, target_user_id, requester_id, role = "Member" }) {
+  await getUserById(user_id);
+  await getUserById(inviter_id);
 
-  const project = await checkProjectExists(project_id);
-  const requester = await checkProjectMember(project_id, requester_id);
-
-  if (!canManageMembers(requester.role))
-    throw { status: 403, message: "Not allowed to assign user" };
-
-  await checkUserExists(target_user_id);
-  project.assigned_user_id = target_user_id;
+  project.assigned_user_id = user_id;
   project.assigned_group_id = null;
   await project.save();
+
   const exists = await ProjectMember.findOne({
-    where: { project_id, user_id: target_user_id }
+    where: { project_id, user_id },
   });
 
   if (!exists) {
     await ProjectMember.create({
       project_id,
-      user_id: target_user_id,
-      role
+      user_id,
+      role,
     });
   }
 
   return project;
 }
+
+export async function addMemberToProjectService({
+  project_id,
+  email,
+  role = "Contributor",
+  inviter_id,
+}) {
+  if (!project_id || !email) {
+    throw { status: 400, message: "Cần project_id và email" };
+  }
+  const project = await getProjectOrThrow(project_id);
+  if (role === "Manager" && project.owner_id !== inviter_id) {
+    throw {
+      status: 403,
+      message: "Chỉ Owner mới có thể thêm Manager vào dự án",
+    };
+  }
+
+  if (role === "Owner") {
+    throw { status: 403, message: "Không thể thêm Owner mới" };
+  }
+  const user_id = await getUserIdByEmail(email);
+  const userInfo = await getUserById(user_id);
+
+  const existed = await ProjectMember.findOne({
+    where: { project_id, user_id },
+  });
+
+  if (existed) {
+    throw {
+      status: 400,
+      message: "Người dùng đã là thành viên của dự án",
+    };
+  }
+
+  await ProjectMember.create({
+    project_id,
+    user_id,
+    role,
+  });
+
+  return {
+    message: "Thêm thành viên vào dự án thành công",
+    member: {
+      user_id,
+      email: userInfo.email,
+      username: userInfo.username,
+      role,
+    },
+  };
+}
+
+export async function getProjectsOfMemberService(user_id) {
+  await getUserById(user_id);
+
+  const memberships = await ProjectMember.findAll({
+    where: { user_id },
+    include: [
+      {
+        model: Project,
+        as: "project",
+      },
+    ],
+  });
+
+  return memberships.map((m) => ({
+    project_id: m.project_id,
+    role: m.role,
+    project: m.project,
+  }));
+}
+
+export async function deleteProjectService(project_id, owner_id) {
+  const project = await getProjectOrThrow(project_id);
+
+  if (project.owner_id !== owner_id) {
+    throw {
+      status: 403,
+      message: "Bạn không có quyền xoá dự án này",
+    };
+  }
+
+  await ProjectMember.destroy({ where: { project_id } });
+  await ProjectGroup.destroy({ where: { project_id } });
+  await Workflow.destroy({ where: { project_id } });
+
+  await project.destroy();
+
+  return { message: "Xoá dự án thành công" };
+}
+
+export async function checkProjectExistsService(project_id) {
+  const project = await getProjectOrThrow(project_id);
+  return project;
+}
+
+export async function getProjectDetailService(project_id) {
+  const project = await getProjectOrThrow(project_id);
+  return project;
+}
+
+export async function getUserProjectsInternalService(user_id) {
+  return getProjectsOfMemberService(user_id);
 }

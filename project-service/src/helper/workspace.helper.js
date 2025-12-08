@@ -1,13 +1,15 @@
-import { internalApi } from "../../config/internalApi.js";
-import { WORKSPACE_SERVICE_URL } from "../../config/env.js";
+import { workspaceInternalApi } from "../config/internalAPI.js";
 
-export async function checkWorkspaceExists(workspace_id) {
+export async function ensureWorkspaceExists(workspace_id) {
   try {
-    const res = await internalApi.get(
-      `${WORKSPACE_SERVICE_URL}/internal/workspace/${workspace_id}/exists`
+    const res = await  workspaceInternalApi.get(
+      `/internal/workspace/${workspace_id}/exists`
     );
-    return res.data.exists;
-  } catch {
-    throw { status: 503, message: "Workspace service unavailable" };
+    return res.data;
+  } catch (err) {
+    if (err.response?.status === 404) {
+      throw { status: 404, message: "Workspace không tồn tại" };
+    }
+    throw { status: 500, message: "Lỗi gọi workspace-service" };
   }
 }

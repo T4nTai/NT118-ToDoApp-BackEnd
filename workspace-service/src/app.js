@@ -1,19 +1,38 @@
 import express from "express";
 import cors from "cors";
-import WorkspaceRouter  from "./routes/workspace.route.js";
-import Workspace_memberRouter  from "./routes/workspace_member.route.js";
-import  { errorHandler } from "./middleware/error.middleware.js";
+import "./config/env.js";
+import { sequelize } from "./config/db.js";
+import initModels from "./models/index.js";
+import Workspace_memberRouter from "./routes/workspace_member.route.js";
+import WorkspaceRouter from "./routes/workspace.route.js";
+import InternalRouter from "./routes/internal.route.js";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.get("/health", (req, res) => res.json({ status: "Workspace OK" }));
 
-app.use("/workspaces", WorkspaceRouter);
-app.use("/members", Workspace_memberRouter);
+initModels();
 
-app.use( errorHandler );
+
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", service: "workspace-service" });
+});
+
+
+app.use("/workspace", WorkspaceRouter);
+
+app.use("/workspace_member", Workspace_memberRouter);
+
+app.use("/internal/workspace", InternalRouter);
+
+
+app.use(errorHandler);
+sequelize
+  .authenticate()
+  .then(() => console.log("Workspace DB connected"))
+  .catch((err) => console.error("Workspace DB connect error:", err));
 
 export default app;

@@ -1,22 +1,59 @@
+// src/models/external_account.model.js
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 
-export const File = sequelize.define(
-  "File",
+export const ExternalAccount = sequelize.define(
+  "ExternalAccount",
   {
-    file_id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    owner_user_id: DataTypes.INTEGER,
-    provider: DataTypes.ENUM("cloudinary", "local", "s3"),
-    public_id: DataTypes.STRING(255),
-    url: DataTypes.STRING(512),
-    resource_type: DataTypes.ENUM("image", "file", "video", "other"),
-    context_type: DataTypes.ENUM("avatar", "attachment", "other"),
-    context_id: DataTypes.INTEGER
+    external_account_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false, // ID từ auth-service
+    },
+    provider: {
+      type: DataTypes.ENUM("github", "google", "gmail"),
+      allowNull: false,
+    },
+    external_user_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true, // github_id / google_sub
+    },
+    access_token: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    refresh_token: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    expires_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    scopes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
-    tableName: "files",
+    tableName: "external_accounts",
     timestamps: true,
     createdAt: "created_at",
-    updatedAt: false
+    updatedAt: "updated_at",
+    indexes: [
+      { fields: ["user_id", "provider"] },
+    ],
   }
 );

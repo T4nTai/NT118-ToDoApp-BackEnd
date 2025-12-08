@@ -1,55 +1,58 @@
-import { WorkspaceService } from "../services/workspace.service.js";
+import {
+  createWorkspaceService,
+  getUserWorkspacesService,
+  getWorkspaceDetailForUserService,
+} from "../services/workspace.service.js";
 
-export class WorkspaceController {
-  static async create(req, res, next) {
-    try {
-      const owner_id = Number(req.headers["x-user-id"]);
-      const ws = await WorkspaceService.createWorkspace({
-        ...req.body,
-        owner_id
-      });
-      res.json(ws);
-    } catch (err) {
-      next(err);
-    }
+export async function createWorkspace(req, res, next) {
+  try {
+    const owner_id = req.user.id;
+    const { name, description } = req.body;
+
+    const workspace = await createWorkspaceService({
+      name,
+      description,
+      owner_id,
+    });
+
+    return res.status(201).json({
+      message: "Tạo workspace thành công",
+      workspace,
+    });
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
   }
+}
 
-  static async detail(req, res, next) {
-    try {
-      const ws = await WorkspaceService.getWorkspaceDetail(req.params.id);
-      res.json(ws);
-    } catch (err) {
-      next(err);
-    }
+export async function getMyWorkspaces(req, res, next) {
+  try {
+    const user_id = req.user.id;
+    const workspaces = await getUserWorkspacesService(user_id);
+
+    return res.status(200).json({ workspaces });
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
   }
+}
 
-  static async myWorkspaces(req, res, next) {
-    try {
-      const user_id = Number(req.headers["x-user-id"]);
-      const list = await WorkspaceService.getUserWorkspaces(user_id);
-      res.json(list);
-    } catch (err) {
-      next(err);
-    }
-  }
+export async function getWorkspaceDetail(req, res, next) {
+  try {
+    const user_id = req.user.id;
+    const workspace_id = parseInt(req.params.workspace_id, 10);
 
-  static async update(req, res, next) {
-    try {
-      const owner_id = Number(req.headers["x-user-id"]);
-      const ws = await WorkspaceService.updateWorkspace(req.params.id, owner_id, req.body);
-      res.json(ws);
-    } catch (err) {
-      next(err);
-    }
-  }
+    const data = await getWorkspaceDetailForUserService(
+      workspace_id,
+      user_id
+    );
 
-  static async delete(req, res, next) {
-    try {
-      const owner_id = Number(req.headers["x-user-id"]);
-      const data = await WorkspaceService.deleteWorkspace(req.params.id, owner_id);
-      res.json(data);
-    } catch (err) {
-      next(err);
-    }
+    return res.status(200).json({ workspace: data });
+  } catch (err) {
+    if (err.status)
+      return res.status(err.status).json({ message: err.message });
+    next(err);
   }
 }
