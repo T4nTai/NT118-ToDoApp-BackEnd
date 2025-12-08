@@ -9,7 +9,7 @@ TaskRouter.get("/user-tasks", authenticateJWT, viewTasksAssignToUser);
 
 TaskRouter.get("/created-by-me", authenticateJWT, viewTasksCreatedByUser);
 
-TaskRouter.post("/create", authenticateJWT, requireProjectRole("Manager"), createTask);
+TaskRouter.post("/create", authenticateJWT, createTask);
 
 TaskRouter.post("/:task_id/assign", authenticateJWT, assignTask);
 
