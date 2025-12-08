@@ -1,4 +1,4 @@
-import { createGroupService, getGroupByUserService, removeGroupService, addMemberToGroupService } from "../services/groupservices.js";
+import { createGroupService, getGroupByUserService, removeGroupService, addMemberToGroupService, getMembersInGroupService } from "../services/groupservices.js";
 import { getUserIdByEmailService } from "../services/authservices.js";
 
 export async function createGroup(req, res) {
@@ -15,6 +15,18 @@ export async function createGroup(req, res) {
     return res.status(201).json({ group });
   } catch (err) {
     return res.status(err.status || 500).json({ message: err.message });
+  }
+}
+
+
+export async function getMembersInGroup(req, res) {
+  try {
+    const { group_id } = req.params;
+    const data = await getMembersInGroupService(group_id);
+
+    res.json(data);
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message });
   }
 }
 
